@@ -160,6 +160,8 @@
 .voice-btn:hover { color: #f97316; }
 .voice-btn.listening { color: #ef4444; animation: pulse-voice 1s ease-in-out infinite; }
 @keyframes pulse-voice { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.voice-lang-btn { background: rgba(234,88,12,0.1); border: 1px solid rgba(234,88,12,0.25); color: #f97316; cursor: pointer; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; transition: all 0.2s; flex-shrink: 0; line-height: 1.4; }
+.voice-lang-btn:hover { background: rgba(234,88,12,0.2); }
 
 .search-suggestions {
   position: absolute;

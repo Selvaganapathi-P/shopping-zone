@@ -3,7 +3,7 @@ const https   = require("https");
 
 const getProducts = async (req, res) => {
   try {
-    const filter = { isActive: true };
+    const filter = { isActive: true, isVisible: { $ne: false } };
     if (req.query.category) filter.category = req.query.category;
     const products = await Product.find(filter);
     res.json(products);
@@ -110,8 +110,8 @@ const deleteProduct = async (req, res) => {
 const getPriceDrops = async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const products = await Product.find({ isActive: true, "priceHistory.1": { $exists: true } });
+    sevenDaysAgo.setHours(sevenDaysAgo.getHours() - 48);
+    const products = await Product.find({ isActive: true, isVisible: { $ne: false }, "priceHistory.1": { $exists: true } });
     const drops = products.filter((p) => {
       const history = p.priceHistory;
       if (history.length < 2) return false;
@@ -153,4 +153,25 @@ const getPexelsPhoto = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct };
+const toggleVisibility = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Not found" });
+    product.isVisible = !product.isVisible;
+    await product.save();
+    res.json({ _id: product._id, isVisible: product.isVisible });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const setFlashSale = async (req, res) => {
+  try {
+    const { enabled, salePrice, startAt, endAt } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Not found" });
+    product.flashSale = { enabled: !!enabled, salePrice: salePrice || null, startAt: startAt || null, endAt: endAt || null };
+    await product.save();
+    res.json(product);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale };

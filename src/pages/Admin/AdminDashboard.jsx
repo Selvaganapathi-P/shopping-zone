@@ -30,6 +30,7 @@ const TABS = [
   { id: "Users",       label: "Users",       Icon: Users },
   { id: "Categories",  label: "Categories",  Icon: Grid3X3 },
   { id: "Banners",     label: "Banners",     Icon: ImageIcon },
+  { id: "Activities",  label: "Activities",  Icon: Clock },
 ];
 
 const CATEGORIES = ["Electronics","Fashion","Home & Kitchen","Sports","Books","Beauty"];
@@ -84,6 +85,8 @@ export default function AdminDashboard() {
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [userSearch,      setUserSearch]      = useState("");
   const [productSearch,   setProductSearch]   = useState("");
+  const [orderSearch,     setOrderSearch]     = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
 
   // Categories
   const [categories,       setCategories]       = useState([]);
@@ -101,6 +104,10 @@ export default function AdminDashboard() {
   const [showBulkModal,    setShowBulkModal]    = useState(false);
   const [bulkEdits,        setBulkEdits]        = useState({});
   const [savingBulk,       setSavingBulk]       = useState(false);
+
+  // Activity log
+  const [activityLogs,     setActivityLogs]     = useState([]);
+  const [activityLoading,  setActivityLoading]  = useState(false);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) navigate("/home");
@@ -157,6 +164,15 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   useEffect(() => {
+    if (activeTab !== "Activities") return;
+    setActivityLoading(true);
+    API.get("/activity-log")
+      .then(({ data }) => setActivityLogs(data))
+      .catch(() => toast.error("Failed to load activity log."))
+      .finally(() => setActivityLoading(false));
+  }, [activeTab]);
+
+  useEffect(() => {
     if (activeTab !== "Banners") return;
     API.get("/banner").then(({ data }) => {
       setBannerForm({ headline: data.headline || "", subheadline: data.subheadline || "", badge: data.badge || "", ctaText: data.ctaText || "", ctaLink: data.ctaLink || "", isActive: data.isActive !== false });
@@ -187,6 +203,14 @@ export default function AdminDashboard() {
       setProducts((prev) => prev.filter((p) => p._id !== id));
       toast.success("Product deleted.");
     } catch { toast.error("Delete failed."); }
+  };
+
+  const handleToggleVisibility = async (product) => {
+    try {
+      const { data } = await API.patch(`/products/${product._id}/visibility`);
+      setProducts((prev) => prev.map((p) => p._id === data._id ? { ...p, isVisible: data.isVisible } : p));
+      toast.success(data.isVisible ? "Product visible." : "Product hidden.");
+    } catch { toast.error("Failed to toggle visibility."); }
   };
 
   const openAddModal = () => {
@@ -522,6 +546,7 @@ export default function AdminDashboard() {
               {activeTab === "Reviews"     && `${reviews.length} reviews`}
               {activeTab === "Categories"  && `${categories.length} categories`}
               {activeTab === "Banners"     && "Home hero banner settings"}
+              {activeTab === "Activities"  && "Admin action audit trail"}
             </p>
           </div>
           <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
@@ -664,6 +689,14 @@ export default function AdminDashboard() {
                     </div>
                     <div className="product-admin-actions">
                       <button className="product-edit-btn"   onClick={() => openEditModal(product)} title="Edit"><Edit2 size={14} /></button>
+                      <button
+                        className="product-edit-btn"
+                        onClick={() => handleToggleVisibility(product)}
+                        title={product.isVisible === false ? "Show product" : "Hide product"}
+                        style={{ color: product.isVisible === false ? "#64748b" : "#22c55e" }}
+                      >
+                        {product.isVisible === false ? <Ban size={14} /> : <CheckCircle size={14} />}
+                      </button>
                       <button className="product-delete-btn" onClick={() => handleDeleteProduct(product._id)} title="Delete"><Trash2 size={14} /></button>
                     </div>
                   </motion.div>
@@ -676,6 +709,27 @@ export default function AdminDashboard() {
         {/* ══ ORDERS ══ */}
         {activeTab === "Orders" && (
           <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.3 }}>
+            <div className="admin-search-row" style={{ gap:10, flexWrap:"wrap" }}>
+              <div className="admin-search-wrap" style={{ flex:1, minWidth:180 }}>
+                <Search size={15} />
+                <input
+                  className="admin-search-input"
+                  placeholder="Search customer or order ID…"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className="status-select"
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                style={{ background:"#1e293b", color:"#f1f5f9", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"8px 12px", fontSize:13 }}
+              >
+                <option value="all">All Statuses</option>
+                {STATUS_STEPS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
             <div className="admin-table-card">
               <div className="table-wrap">
                 <table className="admin-table">
@@ -683,9 +737,17 @@ export default function AdminDashboard() {
                     <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Status</th><th>Update</th></tr>
                   </thead>
                   <tbody>
-                    {orders.length === 0
-                      ? <tr><td colSpan={7} className="empty-row">No orders found</td></tr>
-                      : orders.map((order) => (
+                    {(() => {
+                      const filtered = orders.filter(o => {
+                        const matchStatus = orderStatusFilter === "all" || o.status === orderStatusFilter;
+                        const term = orderSearch.toLowerCase();
+                        const matchSearch = !term ||
+                          o._id?.toLowerCase().includes(term) ||
+                          o.deliveryAddress?.name?.toLowerCase().includes(term);
+                        return matchStatus && matchSearch;
+                      });
+                      if (filtered.length === 0) return <tr><td colSpan={7} className="empty-row">No orders found</td></tr>;
+                      return filtered.map((order) => (
                         <tr key={order._id}>
                           <td className="order-id">#{order._id.slice(0,8).toUpperCase()}</td>
                           <td>{order.deliveryAddress?.name || "—"}</td>
@@ -712,8 +774,8 @@ export default function AdminDashboard() {
                             </select>
                           </td>
                         </tr>
-                      ))
-                    }
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -1112,6 +1174,46 @@ export default function AdminDashboard() {
                 </div>
               </form>
             </div>
+          </motion.div>
+        )}
+        {/* ══ ACTIVITIES ══ */}
+        {activeTab === "Activities" && (
+          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.3 }}>
+            {activityLoading ? (
+              <div className="admin-loading" style={{ minHeight:200 }}>
+                <div className="admin-spinner" /><p>Loading activity log…</p>
+              </div>
+            ) : (
+              <div className="admin-table-card">
+                <div className="table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr><th>Time</th><th>Admin</th><th>Action</th><th>Entity</th><th>IP</th></tr>
+                    </thead>
+                    <tbody>
+                      {activityLogs.length === 0
+                        ? <tr><td colSpan={5} className="empty-row">No activity recorded yet</td></tr>
+                        : activityLogs.map((log) => (
+                          <tr key={log._id}>
+                            <td style={{ fontSize:12, color:"#64748b", whiteSpace:"nowrap" }}>
+                              {log.createdAt ? new Date(log.createdAt).toLocaleString("en-IN") : "—"}
+                            </td>
+                            <td style={{ fontSize:12 }}>{log.adminEmail || "—"}</td>
+                            <td>
+                              <span style={{ background:"rgba(234,88,12,0.12)", color:"#f97316", borderRadius:6, padding:"2px 8px", fontSize:12, fontWeight:600 }}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td style={{ fontSize:12, color:"#94a3b8" }}>{log.entity}{log.entityId ? ` #${log.entityId.slice(0,8)}` : ""}</td>
+                            <td style={{ fontSize:11, color:"#475569" }}>{log.ip || "—"}</td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </main>

@@ -4,6 +4,8 @@ const cors       = require("cors");
 const path       = require("path");
 const helmet     = require("helmet");
 const rateLimit  = require("express-rate-limit");
+const morgan     = require("morgan");
+const xss        = require("xss");
 const { Server } = require("socket.io");
 require("dotenv").config();
 require("./database");
@@ -21,8 +23,10 @@ io.on("connection", (socket) => {
   socket.on("leave_product", (productId) => socket.leave(`product_${productId}`));
 });
 
-// Attach io to app so controllers can emit events
 app.set("io", io);
+
+// ── Logging ──
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // ── Security headers ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -37,27 +41,42 @@ const authLimiter = rateLimit({
 });
 
 // ── CORS ──
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000").split(",").map(s => s.trim());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) return cb(null, true);
+    cb(new Error("Not allowed by CORS"));
+  },
   credentials: true,
 }));
 
-// ── Body parsing + sanitization ──
+// ── Body parsing ──
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
-// Strip keys starting with $ or containing . to prevent NoSQL injection
+
+// ── NoSQL injection sanitization (strip $ and . keys) ──
 app.use((req, res, next) => {
-  const sanitize = (obj) => {
+  const sanitizeKeys = (obj) => {
     if (!obj || typeof obj !== "object") return;
     for (const key of Object.keys(obj)) {
-      if (key.startsWith("$") || key.includes(".")) {
-        delete obj[key];
-      } else {
-        sanitize(obj[key]);
-      }
+      if (key.startsWith("$") || key.includes(".")) { delete obj[key]; }
+      else sanitizeKeys(obj[key]);
     }
   };
-  sanitize(req.body);
+  sanitizeKeys(req.body);
+  next();
+});
+
+// ── XSS sanitization on string values in body ──
+app.use((req, res, next) => {
+  const sanitizeValues = (obj) => {
+    if (!obj || typeof obj !== "object") return;
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === "string") obj[key] = xss(obj[key]);
+      else sanitizeValues(obj[key]);
+    }
+  };
+  sanitizeValues(req.body);
   next();
 });
 
@@ -73,18 +92,18 @@ app.use("/api/auth/register",    authLimiter);
 app.use("/api", require("./app"));
 
 // ── Health check ──
-app.get("/start", (req, res) => {
-  res.json({ status: "ok", app: "Thansel Zovia API", version: "2.0" });
-});
+app.get("/", (req, res) => res.json({ status: "ok", app: "Thansel Zovia API", version: "2.0" }));
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 // ── Global error handler ──
 app.use((err, req, res, next) => {
   const status  = err.status || 500;
   const message = process.env.NODE_ENV === "production" ? "Something went wrong." : err.message;
+  if (process.env.NODE_ENV !== "production") console.error(err.stack);
   res.status(status).json({ message });
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Thansel Zovia API running on port ${PORT}`);
+  console.log(`Thansel Zovia API running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
 });

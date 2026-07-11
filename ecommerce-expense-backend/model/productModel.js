@@ -11,6 +11,13 @@ const productSchema = new mongoose.Schema({
   images:       [{ type: String }],
   description:  { type: String, required: true },
   isActive:     { type: Boolean, default: true },
+  isVisible:    { type: Boolean, default: true },
+  flashSale:    {
+    enabled:   { type: Boolean, default: false },
+    salePrice: { type: Number, default: null },
+    startAt:   { type: Date,   default: null },
+    endAt:     { type: Date,   default: null },
+  },
   priceHistory: [{
     price: { type: Number },
     date:  { type: Date, default: Date.now },

@@ -12,6 +12,7 @@ router.use("/coupons",    require("./router/couponRouter"));
 router.use("/ai",         require("./router/aiRouter"));
 router.use("/categories", require("./router/categoryRouter"));
 router.use("/banner",     require("./router/bannerRouter"));
-router.use("/addresses",  require("./router/addressRouter"));
+router.use("/addresses",    require("./router/addressRouter"));
+router.use("/activity-log", require("./router/activityLogRouter"));
 
 module.exports = router;

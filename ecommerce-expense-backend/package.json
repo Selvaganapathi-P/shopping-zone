@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [],
   "author": "",
@@ -23,11 +27,14 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.3",
+    "morgan": "^1.11.0",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^9.0.3",
     "nodemon": "^3.1.14",
     "pdfkit": "^0.19.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "xss": "^1.0.15",
+    "zod": "^4.4.3"
   }
 }

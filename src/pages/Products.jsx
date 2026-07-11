@@ -23,6 +23,12 @@ const CAT_FILTERS = {
   },
 };
 
+// Filters applied to all categories
+const GLOBAL_CHIP_FILTERS = {
+  Rating:   ["4★ & above","3★ & above"],
+  Discount: ["10% off","25% off","50% off"],
+};
+
 function SkeletonCard() {
   return (
     <div className="product-skeleton">
@@ -47,7 +53,7 @@ const cardVariants = {
 };
 
 // Voice search using Web Speech API
-function useVoiceSearch(onResult) {
+function useVoiceSearch(onResult, lang = "en-IN") {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -58,7 +64,7 @@ function useVoiceSearch(onResult) {
       return;
     }
     const rec = new SpeechRecognition();
-    rec.lang = "en-IN";
+    rec.lang = lang;
     rec.interimResults = false;
     rec.maxAlternatives = 1;
 
@@ -73,7 +79,7 @@ function useVoiceSearch(onResult) {
 
     recognitionRef.current = rec;
     rec.start();
-  }, [onResult]);
+  }, [onResult, lang]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
@@ -102,10 +108,11 @@ export default function Products() {
   const { isInWishlist, toggleWishlist }          = useWishlist();
   const [searchParams]                            = useSearchParams();
 
+  const [voiceLang, setVoiceLang] = useState("en-IN");
   const { listening, startListening, stopListening } = useVoiceSearch((text) => {
     setSearch(text);
     setShowSuggestions(false);
-  });
+  }, voiceLang);
 
   useEffect(() => {
     API.get("/products")
@@ -150,14 +157,32 @@ export default function Products() {
     if (search) result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
     result = result.filter((p) => p.price <= priceRange);
     // Advanced per-category chip filters (keyword match in name/description)
-    Object.entries(advFilters).forEach(([, vals]) => {
+    Object.entries(advFilters).forEach(([group, vals]) => {
       if (!vals?.length) return;
-      result = result.filter((p) =>
-        vals.some((v) =>
-          p.name?.toLowerCase().includes(v.toLowerCase()) ||
-          p.description?.toLowerCase().includes(v.toLowerCase())
-        )
-      );
+      if (group === "Rating") {
+        const minRating = vals.reduce((min, v) => {
+          const n = parseFloat(v);
+          return n < min ? n : min;
+        }, Infinity);
+        result = result.filter((p) => (p.rating || 0) >= minRating);
+      } else if (group === "Discount") {
+        const minPct = vals.reduce((min, v) => {
+          const n = parseFloat(v);
+          return n < min ? n : min;
+        }, Infinity);
+        result = result.filter((p) => {
+          if (!p.mrp || p.mrp <= p.price) return false;
+          const pct = Math.round(((p.mrp - p.price) / p.mrp) * 100);
+          return pct >= minPct;
+        });
+      } else {
+        result = result.filter((p) =>
+          vals.some((v) =>
+            p.name?.toLowerCase().includes(v.toLowerCase()) ||
+            p.description?.toLowerCase().includes(v.toLowerCase())
+          )
+        );
+      }
     });
     if (sortBy === "Price: Low to High") result.sort((a,b) => a.price - b.price);
     if (sortBy === "Price: High to Low") result.sort((a,b) => b.price - a.price);
@@ -259,6 +284,27 @@ export default function Products() {
             </div>
           ))}
 
+          {/* Global rating & discount filters */}
+          {Object.entries(GLOBAL_CHIP_FILTERS).map(([group, opts]) => (
+            <div className="filter-group" key={group}>
+              <h4>{group}</h4>
+              <div className="filter-chips">
+                {opts.map((val) => {
+                  const active = (advFilters[group] || []).includes(val);
+                  return (
+                    <button
+                      key={val}
+                      className={`filter-chip-btn ${active ? "active" : ""}`}
+                      onClick={() => toggleAdvFilter(group, val)}
+                    >
+                      {active && <Check size={10} />} {val}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
           {activeFilterCount > 0 && <button className="reset-btn" onClick={resetFilters}><X size={14} /> Reset All</button>}
         </aside>
 
@@ -279,9 +325,16 @@ export default function Products() {
                 <button
                   className={`voice-btn ${listening ? "listening" : ""}`}
                   onClick={handleVoiceToggle}
-                  title={listening ? "Stop listening" : "Voice search"}
+                  title={listening ? "Stop listening" : `Voice search (${voiceLang === "ta-IN" ? "Tamil" : "English"})`}
                 >
                   {listening ? <MicOff size={15} /> : <Mic size={15} />}
+                </button>
+                <button
+                  className="voice-lang-btn"
+                  onClick={() => setVoiceLang(v => v === "en-IN" ? "ta-IN" : "en-IN")}
+                  title={`Switch to ${voiceLang === "en-IN" ? "Tamil" : "English"} voice`}
+                >
+                  {voiceLang === "ta-IN" ? "த" : "EN"}
                 </button>
               </div>
 
