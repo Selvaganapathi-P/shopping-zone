@@ -24,7 +24,7 @@ const months = [
 ];
 
 export default function ExpenseTracker() {
-  const { user } = useAuth();
+  useAuth();
 
   const [expenses, setExpenses]         = useState([]);
   const [orders, setOrders]             = useState([]);
