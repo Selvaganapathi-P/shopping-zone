@@ -1,266 +1,261 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { db } from "../firebase/config";
-import { doc, getDoc } from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, ShoppingBag, Lock, Mail, Key, AlertCircle } from "lucide-react";
+import toast from "react-hot-toast";
 import "./Auth.css";
 
+const PARTICLE_COUNT = 60;
+
+function StarField() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let raf;
+
+    const resize = () => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const stars = Array.from({ length: PARTICLE_COUNT }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      speed: Math.random() * 0.4 + 0.1,
+      alpha: Math.random(),
+      dAlpha: (Math.random() * 0.01 + 0.004) * (Math.random() > 0.5 ? 1 : -1),
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        s.y -= s.speed;
+        s.alpha += s.dAlpha;
+        if (s.alpha <= 0 || s.alpha >= 1) s.dAlpha *= -1;
+        if (s.y < 0) { s.y = canvas.height; s.x = Math.random() * canvas.width; }
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, s.alpha));
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="star-canvas" aria-hidden />;
+}
+
 export default function Login() {
-  const { login, googleLogin } = useAuth();
-  const navigate = useNavigate();
+  const { login, adminLogin } = useAuth();
+  const navigate = useNavigate(); // eslint-disable-line no-unused-vars
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isAdmin, setIsAdmin]     = useState(false);
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
   const [secretKey, setSecretKey] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass]   = useState(false);
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
-
-  try {
-    if (isAdmin) {
-      // Step 1 — Check Firestore
-      const snap = await getDoc(doc(db, "admins", "admin"));
-
-      if (!snap.exists()) {
-        setError("Admin account not found.");
-        setLoading(false);
-        return;
-      }
-
-      const adminData = snap.data();
-
-      // Step 2 — Check email
-      if (adminData.email !== email) {
-        setError("You are not authorized as admin.");
-        setLoading(false);
-        return;
-      }
-
-      // Step 3 — Check secret key
-      if (adminData.secretKey !== secretKey) {
-        setError("Invalid admin secret key.");
-        setLoading(false);
-        return;
-      }
-
-      // Step 4 — Set admin session BEFORE login
-      localStorage.setItem("isAdminSession", "true");
-
-      // Step 5 — Login
-      await login(email, password);
-
-      // Step 6 — Force hard redirect to admin
-      // Using window.location instead of navigate
-      // to avoid Firebase Auth re-render race condition
-      window.location.href = "/admin";
-
-    } else {
-      // Normal user login
-      localStorage.removeItem("isAdminSession");
-      await login(email, password);
-      window.location.href = "/home";
-    }
-  } catch (err) {
-    localStorage.removeItem("isAdminSession");
-    setError("Invalid email or password.");
-    setLoading(false);
-  }
-};
-  const handleGoogle = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError("");
+    setLoading(true);
     try {
-      localStorage.removeItem("isAdminSession");
-      await googleLogin();
-      navigate("/home", { replace: true });
+      if (isAdmin) {
+        await adminLogin(email, password, secretKey);
+        toast.success("Welcome back, Admin!");
+        window.location.href = "/admin";
+      } else {
+        await login(email, password);
+        toast.success("Welcome back!");
+        window.location.href = "/home";
+      }
     } catch (err) {
-      setError("Google sign-in failed.");
+      localStorage.removeItem("isAdminSession");
+      const msg = err.response?.data?.message || "Invalid credentials.";
+      setError(msg);
+      toast.error(msg);
     }
+    setLoading(false);
+  };
+
+  const switchRole = (admin) => {
+    setIsAdmin(admin);
+    setError("");
+    setEmail(""); setPassword(""); setSecretKey("");
   };
 
   return (
     <div className="auth-page">
+      <StarField />
 
-      {/* Background elements */}
-      <div className="orb-bottom" />
+      {/* Gradient orbs */}
+      <div className="auth-orb auth-orb-1" aria-hidden />
+      <div className="auth-orb auth-orb-2" aria-hidden />
 
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={`star-${i}`}
-          className="star"
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDuration: `${Math.random() * 3 + 2}s`,
-            animationDelay: `${Math.random() * 3}s`,
-          }}
-        />
-      ))}
-
-      {[...Array(10)].map((_, i) => (
-        <div
-          key={`particle-${i}`}
-          className="particle"
-          style={{
-            width: `${Math.random() * 8 + 4}px`,
-            height: `${Math.random() * 8 + 4}px`,
-            left: `${Math.random() * 100}%`,
-            animationDuration: `${Math.random() * 12 + 8}s`,
-            animationDelay: `${Math.random() * 6}s`,
-          }}
-        />
-      ))}
-
-      <div className="auth-card">
-
-        {/* Logo */}
-        <div className="auth-logo">
-          <span>🛍️</span>
-          <h1>ShopTrack</h1>
+      <motion.div
+        className="auth-card"
+        initial={{ opacity: 0, y: 32, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0,  scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Brand */}
+        <div className="auth-brand">
+          <div className="auth-brand-icon">
+            <ShoppingBag size={24} />
+          </div>
+          <h1 className="auth-brand-name">Thansel Zovia</h1>
         </div>
 
-        {/* ── Top Toggle: Login / Signup ── */}
+        {/* Page toggle */}
         <div className="auth-toggle">
-          <button className="toggle-btn active">Login</button>
-          <Link to="/signup" className="toggle-btn">Sign Up</Link>
+          <span className="auth-toggle-btn active">Login</span>
+          <Link to="/signup" className="auth-toggle-btn">Sign Up</Link>
         </div>
 
-        {/* ── Role Toggle: User / Admin ── */}
+        {/* Role toggle */}
         <div className="role-toggle">
           <button
+            type="button"
             className={`role-btn ${!isAdmin ? "active" : ""}`}
-            onClick={() => {
-              setIsAdmin(false);
-              setError("");
-              setSecretKey("");
-              setEmail("");
-              setPassword("");
-            }}
+            onClick={() => switchRole(false)}
           >
-            🛍️ User Login
+            🛍️ User
           </button>
           <button
+            type="button"
             className={`role-btn ${isAdmin ? "active" : ""}`}
-            onClick={() => {
-              setIsAdmin(true);
-              setError("");
-              setEmail("");
-              setPassword("");
-              setSecretKey("");
-            }}
+            onClick={() => switchRole(true)}
           >
-            ⚙️ Admin Login
+            ⚙️ Admin
           </button>
         </div>
 
-        {/* Title */}
-        <div className="auth-title-section">
-          <h2>
-            {isAdmin ? "Admin Access 🔐" : "Welcome Back 👋"}
-          </h2>
-          <p>
-            {isAdmin
-              ? "Enter your admin credentials"
-              : "Login to your account to continue"}
-          </p>
-        </div>
-
-        {/* Error */}
-        {error && <div className="auth-error">{error}</div>}
-
-        {/* Form */}
-        <form onSubmit={handleLogin} className="auth-form">
-
-          <div className="input-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              placeholder={isAdmin ? "Admin email" : "Enter your email"}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder={
-                isAdmin ? "Admin password" : "Enter your password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Secret Key — only for admin */}
-          {isAdmin && (
-            <div className="input-group">
-              <label>🔑 Admin Secret Key</label>
-              <input
-                type="password"
-                placeholder="Enter secret key"
-                value={secretKey}
-                onChange={(e) => setSecretKey(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          <button
-            className={`auth-submit-btn ${isAdmin ? "admin-btn" : ""}`}
-            type="submit"
-            disabled={loading}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={isAdmin ? "admin" : "user"}
+            initial={{ opacity: 0, x: isAdmin ? 20 : -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: isAdmin ? -20 : 20 }}
+            transition={{ duration: 0.2 }}
           >
-            {loading
-              ? "Please wait..."
-              : isAdmin
-              ? "Access Dashboard →"
-              : "Login →"}
-          </button>
-        </form>
-
-        {/* Google — only for user login */}
-        {!isAdmin && (
-          <>
-            <div className="auth-divider">
-              <span>or continue with</span>
+            <div className="auth-title-section">
+              <h2>{isAdmin ? "Admin Access 🔐" : "Welcome Back 👋"}</h2>
+              <p>{isAdmin ? "Restricted to authorized personnel" : "Login to continue shopping"}</p>
             </div>
-            <button className="auth-google-btn" onClick={handleGoogle}>
-              <img
-                src="https://www.google.com/favicon.ico"
-                alt="google"
-                width="18"
-              />
-              Continue with Google
-            </button>
-          </>
-        )}
 
-        {/* Switch — only for user */}
+            {error && (
+              <motion.div
+                className="auth-error"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <AlertCircle size={15} /> {error}
+              </motion.div>
+            )}
+
+            <form onSubmit={handleLogin} className="auth-form">
+              <div className="input-group">
+                <label>Email Address</label>
+                <div className="input-wrap">
+                  <Mail size={16} className="input-icon" />
+                  <input
+                    type="email"
+                    placeholder={isAdmin ? "Admin email" : "your@email.com"}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Password</label>
+                <div className="input-wrap">
+                  <Lock size={16} className="input-icon" />
+                  <input
+                    type={showPass ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="toggle-pass"
+                    onClick={() => setShowPass(!showPass)}
+                    tabIndex={-1}
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {isAdmin && (
+                <motion.div
+                  className="input-group"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <label>Admin Secret Key</label>
+                  <div className="input-wrap">
+                    <Key size={16} className="input-icon" />
+                    <input
+                      type="password"
+                      placeholder="Enter secret key"
+                      value={secretKey}
+                      onChange={(e) => setSecretKey(e.target.value)}
+                      required
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              <button
+                className={`auth-submit ${isAdmin ? "admin-submit" : ""}`}
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="auth-spinner" />
+                ) : (
+                  isAdmin ? "Access Dashboard →" : "Login →"
+                )}
+              </button>
+            </form>
+          </motion.div>
+        </AnimatePresence>
+
         {!isAdmin && (
           <p className="auth-switch">
-            Don't have an account?
-            <Link to="/signup" className="auth-switch-link">
-              Sign Up
-            </Link>
+            Don't have an account?{" "}
+            <Link to="/signup" className="auth-link">Sign Up</Link>
           </p>
         )}
-
-        {/* Admin note */}
         {isAdmin && (
-          <p className="admin-note">
+          <p className="auth-note">
             🔒 Admin access is restricted to authorized personnel only.
           </p>
         )}
-
-      </div>
+      </motion.div>
     </div>
   );
 }

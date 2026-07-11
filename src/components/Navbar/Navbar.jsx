@@ -1,119 +1,238 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
-import { FiShoppingCart, FiChevronDown } from "react-icons/fi";
-import { MdOutlineTrackChanges } from "react-icons/md";
+import {
+  ShoppingCart, ChevronDown, LayoutDashboard,
+  User, BarChart2, LogOut, Menu, X
+} from "lucide-react";
 import "./Navbar.css";
 
-export default function Navbar() {
-  const { user, logout } = useAuth();
-  const { cartCount } = useCart();
-  const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+export default function Navbar({ transparent = false }) {
+  const { user, logout }  = useAuth();
+  const { cartCount }     = useCart();
+  const navigate          = useNavigate();
+  const location          = useLocation();
+  const dropdownRef       = useRef(null);
 
- const handleLogout = async () => {
-  localStorage.removeItem("isAdminSession");
-  await logout();
-  navigate("/login");
-};
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAdminSession");
+    logout();
+    navigate("/login");
+  };
+
+  const isActive = (path) => location.pathname === path;
+
+  const navbarClass = [
+    "navbar",
+    transparent && !scrolled ? "navbar-transparent" : "navbar-solid",
+    scrolled ? "navbar-scrolled" : "",
+  ].filter(Boolean).join(" ");
 
   return (
-    <nav className="navbar">
+    <>
+      <nav className={navbarClass}>
+        <div className="navbar-inner">
 
-      {/* ── Logo ── */}
-      <div className="navbar-logo">
-        <Link to="/home">🛍️ ShopTrack</Link>
-      </div>
-
-      {/* ── Nav Links ── */}
-      <ul className="navbar-links">
-        <li><Link to="/home">Home</Link></li>
-        <li><Link to="/products">Products</Link></li>
-        <li>
-          <Link to="/cart" className="cart-link">
-            <div className="cart-icon-wrap">
-              <FiShoppingCart size={18} />
-              {cartCount > 0 && (
-                <span className="cart-badge">{cartCount}</span>
-              )}
-            </div>
-            <span>Cart</span>
+          {/* Logo */}
+          <Link to="/home" className="navbar-logo">
+            <span className="logo-icon">🛍️</span>
+            <span className="logo-text">Thansel Zovia</span>
           </Link>
-        </li>
-      </ul>
 
-      {/* ── Right Section ── */}
-      <div className="navbar-right">
+          {/* Desktop links */}
+          <ul className="navbar-links">
+            {[
+              { path: "/home",     label: "Home" },
+              { path: "/products", label: "Products" },
+            ].map(({ path, label }) => (
+              <li key={path}>
+                <Link
+                  to={path}
+                  className={`nav-link ${isActive(path) ? "active" : ""}`}
+                >
+                  {label}
+                  {isActive(path) && (
+                    <motion.div
+                      className="nav-link-dot"
+                      layoutId="nav-dot"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              </li>
+            ))}
 
-        {/* Expense Tracker Button */}
-        <button
-          className="expense-btn"
-          onClick={() => navigate("/expense-tracker")}
-        >
-          <MdOutlineTrackChanges size={18} />
-          Expense Tracker
-        </button>
+            {/* Cart */}
+            <li>
+              <Link to="/cart" className={`nav-link cart-nav-link ${isActive("/cart") ? "active" : ""}`}>
+                <div className="cart-icon-wrap">
+                  <ShoppingCart size={18} />
+                  <AnimatePresence>
+                    {cartCount > 0 && (
+                      <motion.span
+                        className="cart-badge"
+                        key="badge"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 600, damping: 20 }}
+                      >
+                        {cartCount > 9 ? "9+" : cartCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+                Cart
+              </Link>
+            </li>
+          </ul>
 
-        {/* Profile */}
-        <div
-          className="profile-wrapper"
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-        >
-          <img
-            src={
-              user?.photoURL ||
-              `https://ui-avatars.com/api/?name=${user?.displayName}&background=e85d04&color=fff`
-            }
-            alt="profile"
-            className="profile-avatar"
-          />
-          <FiChevronDown
-            size={16}
-            style={{
-              transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s",
-            }}
-          />
-        </div>
+          {/* Right side */}
+          <div className="navbar-right">
+            {/* Expense tracker button */}
+            <button
+              className="expense-btn"
+              onClick={() => navigate("/expense-tracker")}
+              title="Expense Tracker"
+            >
+              <BarChart2 size={16} />
+              <span>Expenses</span>
+            </button>
 
-        {/* Dropdown */}
-        {dropdownOpen && (
-          <>
-            {/* Click outside to close */}
-            <div
-              className="dropdown-overlay"
-              onClick={() => setDropdownOpen(false)}
-            />
-            <div className="profile-dropdown">
-              <img
-                src={
-                  user?.photoURL ||
-                  `https://ui-avatars.com/api/?name=${user?.displayName}&background=e85d04&color=fff`
-                }
-                alt="profile"
-                className="dropdown-avatar"
-              />
-              <p className="dropdown-name">{user?.displayName || "User"}</p>
-              <p className="dropdown-email">{user?.email}</p>
-
+            {/* Profile dropdown */}
+            <div className="profile-wrapper" ref={dropdownRef}>
               <button
-                className="view-profile-btn"
-                onClick={() => {
-                  navigate("/profile");
-                  setDropdownOpen(false);
-                }}
+                className="profile-trigger"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-expanded={dropdownOpen}
               >
-                👤 View Profile
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true`}
+                  alt="avatar"
+                  className="profile-avatar"
+                />
+                <ChevronDown
+                  size={14}
+                  className={`chevron ${dropdownOpen ? "open" : ""}`}
+                />
               </button>
 
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    className="profile-dropdown"
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0,  scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="dropdown-header">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true&size=80`}
+                        alt="avatar"
+                        className="dropdown-avatar"
+                      />
+                      <p className="dropdown-name">{user?.name || "User"}</p>
+                      <p className="dropdown-email">{user?.email}</p>
+                    </div>
+
+                    <div className="dropdown-menu">
+                      <button
+                        className="dropdown-item"
+                        onClick={() => { navigate("/profile"); setDropdownOpen(false); }}
+                      >
+                        <User size={15} /> My Profile
+                      </button>
+
+                      {user?.isAdmin && (
+                        <button
+                          className="dropdown-item dropdown-item-admin"
+                          onClick={() => { navigate("/admin"); setDropdownOpen(false); }}
+                        >
+                          <LayoutDashboard size={15} /> Admin Dashboard
+                        </button>
+                      )}
+
+                      <div className="dropdown-divider" />
+
+                      <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                        <LogOut size={15} /> Logout
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </>
+
+            {/* Mobile hamburger */}
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="mobile-menu"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+          >
+            {[
+              { path: "/home",             label: "Home" },
+              { path: "/products",         label: "Products" },
+              { path: "/cart",             label: `Cart (${cartCount})` },
+              { path: "/expense-tracker",  label: "Expenses" },
+              { path: "/profile",          label: "My Profile" },
+            ].map(({ path, label }) => (
+              <Link key={path} to={path} className={`mobile-link ${isActive(path) ? "active" : ""}`}>
+                {label}
+              </Link>
+            ))}
+            {user?.isAdmin && (
+              <Link to="/admin" className="mobile-link mobile-link-admin">
+                Admin Dashboard
+              </Link>
+            )}
+            <button className="mobile-logout" onClick={handleLogout}>
+              <LogOut size={15} /> Logout
+            </button>
+          </motion.div>
         )}
-      </div>
-    </nav>
+      </AnimatePresence>
+    </>
   );
 }

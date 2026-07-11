@@ -1,108 +1,108 @@
 import { useEffect, useState } from "react";
-import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import API from "../api/axios";
 import Navbar from "../components/Navbar/Navbar";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie,
   Cell, Legend, LineChart, Line
 } from "recharts";
-import { FiShoppingBag, FiTrendingUp, FiCalendar, FiList } from "react-icons/fi";
+import {
+  FiShoppingBag, FiTrendingUp, FiCalendar, FiList
+} from "react-icons/fi";
 import "./ExpenseTracker.css";
 
-const COLORS = ["#e85d04", "#f4a261", "#2ecc71", "#3498db", "#9b59b6", "#e74c3c"];
+const COLORS = [
+  "#e85d04","#f4a261","#2ecc71",
+  "#3498db","#9b59b6","#e74c3c"
+];
 
 const months = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January","February","March","April",
+  "May","June","July","August",
+  "September","October","November","December"
 ];
 
 export default function ExpenseTracker() {
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState([]);
-  const [orders, setOrders] = useState([]);
+
+  const [expenses, setExpenses]         = useState([]);
+  const [orders, setOrders]             = useState([]);
+  const [monthlyTrend, setMonthlyTrend] = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toLocaleString("default", { month: "long" })
   );
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [monthlyTrend, setMonthlyTrend] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear]   = useState(
+    new Date().getFullYear()
+  );
+  const [selectedDate, setSelectedDate]   = useState(null);
 
-  // Fetch expenses + orders when month/year changes
+  // Fetch expenses and orders
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const expQ = query(
-          collection(db, "expenses"),
-          where("userId", "==", user.uid),
-          where("month", "==", selectedMonth),
-          where("year", "==", selectedYear)
+        // Fetch expenses for selected month + year
+        const expRes = await API.get(
+          `/expenses?month=${selectedMonth}&year=${selectedYear}`
         );
-        const expSnap = await getDocs(expQ);
-        const expData = expSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setExpenses(expData);
+        setExpenses(expRes.data);
 
-        const ordQ = query(
-          collection(db, "orders"),
-          where("userId", "==", user.uid),
-          where("month", "==", selectedMonth),
-          where("year", "==", selectedYear)
+        // Fetch my orders and filter
+        const ordRes = await API.get("/orders/my");
+        const filtered = ordRes.data.filter(
+          (o) =>
+            o.month === selectedMonth &&
+            o.year  === Number(selectedYear)
         );
-        const ordSnap = await getDocs(ordQ);
-        const ordData = ordSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setOrders(ordData);
+        setOrders(filtered);
       } catch (err) {
-        console.error(err);
+        console.error("Expense fetch error:", err);
       }
       setLoading(false);
     };
     fetchData();
-  }, [user, selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear]);
 
-  // Fetch monthly trend for line chart
+  // Fetch monthly trend
   useEffect(() => {
     const fetchTrend = async () => {
       try {
-        const q = query(
-          collection(db, "expenses"),
-          where("userId", "==", user.uid),
-          where("year", "==", selectedYear)
+        const { data } = await API.get(
+          `/expenses?year=${selectedYear}`
         );
-        const snap = await getDocs(q);
-        const data = snap.docs.map((d) => d.data());
         const trend = months.map((m) => ({
-          month: m.slice(0, 3),
+          month:  m.slice(0, 3),
           amount: data
             .filter((e) => e.month === m)
             .reduce((sum, e) => sum + e.amount, 0),
         }));
         setMonthlyTrend(trend);
       } catch (err) {
-        console.error(err);
+        console.error("Trend fetch error:", err);
       }
     };
     fetchTrend();
-  }, [user, selectedYear, expenses]);
+  }, [selectedYear, expenses]);
 
-  // ── Calculations ──
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalOrders = orders.length;
-  const avgOrderValue = totalOrders > 0 ? Math.round(totalSpent / totalOrders) : 0;
+  // Calculations
+  const totalSpent    = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalOrders   = orders.length;
+  const avgOrderValue = totalOrders > 0
+    ? Math.round(totalSpent / totalOrders) : 0;
 
-  // Filter by selected date
+  // Filter by date
   const displayExpenses = selectedDate
     ? expenses.filter((e) => {
-        const d = e.date?.toDate ? e.date.toDate().getDate() : new Date().getDate();
+        const d = new Date(e.createdAt).getDate();
         return d === selectedDate;
       })
     : expenses;
 
-  const dateTotal = displayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const dateTotal = displayExpenses.reduce((s, e) => s + e.amount, 0);
 
-  // Category data for Pie Chart (always full month)
+  // Category data for Pie
   const categoryData = expenses.reduce((acc, e) => {
     const existing = acc.find((a) => a.name === e.category);
     if (existing) existing.value += e.amount;
@@ -110,15 +110,17 @@ export default function ExpenseTracker() {
     return acc;
   }, []);
 
-  // Daily data for Bar Chart (always full month)
+  // Daily data for Bar
   const dailyData = expenses.reduce((acc, e) => {
-    const date = e.date?.toDate ? e.date.toDate().getDate() : new Date().getDate();
-    const day = `Day ${date}`;
+    const date = new Date(e.createdAt).getDate();
+    const day  = `Day ${date}`;
     const existing = acc.find((a) => a.day === day);
     if (existing) existing.amount += e.amount;
     else acc.push({ day, amount: e.amount });
     return acc;
-  }, []).sort((a, b) => parseInt(a.day.split(" ")[1]) - parseInt(b.day.split(" ")[1]));
+  }, []).sort((a, b) =>
+    parseInt(a.day.split(" ")[1]) - parseInt(b.day.split(" ")[1])
+  );
 
   return (
     <div className="expense-page">
@@ -126,14 +128,14 @@ export default function ExpenseTracker() {
 
       <div className="expense-container">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="expense-header">
           <div>
             <h1>📊 Expense Tracker</h1>
             <p>Monitor your monthly spending at a glance</p>
           </div>
 
-          {/* ── Filters ── */}
+          {/* Filters */}
           <div className="month-year-selector">
             <FiCalendar size={16} className="cal-icon" />
 
@@ -141,9 +143,14 @@ export default function ExpenseTracker() {
               <label>Month</label>
               <select
                 value={selectedMonth}
-                onChange={(e) => { setSelectedMonth(e.target.value); setSelectedDate(null); }}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setSelectedDate(null);
+                }}
               >
-                {months.map((m) => <option key={m}>{m}</option>)}
+                {months.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
               </select>
             </div>
 
@@ -153,9 +160,14 @@ export default function ExpenseTracker() {
               <label>Year</label>
               <select
                 value={selectedYear}
-                onChange={(e) => { setSelectedYear(Number(e.target.value)); setSelectedDate(null); }}
+                onChange={(e) => {
+                  setSelectedYear(Number(e.target.value));
+                  setSelectedDate(null);
+                }}
               >
-                {[2024, 2025, 2026, 2027].map((y) => <option key={y}>{y}</option>)}
+                {[2024, 2025, 2026, 2027].map((y) => (
+                  <option key={y}>{y}</option>
+                ))}
               </select>
             </div>
 
@@ -165,17 +177,26 @@ export default function ExpenseTracker() {
               <label>Date</label>
               <select
                 value={selectedDate || ""}
-                onChange={(e) => setSelectedDate(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) =>
+                  setSelectedDate(
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
               >
                 <option value="">All Dates</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                  <option key={d} value={d}>{d} {selectedMonth.slice(0, 3)}</option>
+                  <option key={d} value={d}>
+                    {d} {selectedMonth.slice(0, 3)}
+                  </option>
                 ))}
               </select>
             </div>
 
             {selectedDate && (
-              <button className="clear-date-btn" onClick={() => setSelectedDate(null)}>
+              <button
+                className="clear-date-btn"
+                onClick={() => setSelectedDate(null)}
+              >
                 ✕ Clear
               </button>
             )}
@@ -186,31 +207,50 @@ export default function ExpenseTracker() {
           <div className="exp-loading">Loading your expenses...</div>
         ) : (
           <>
-            {/* ── Summary Cards ── */}
+            {/* Summary Cards */}
             <div className="summary-cards">
               <div className="summary-card orange">
-                <div className="summary-icon"><FiShoppingBag size={24} /></div>
+                <div className="summary-icon">
+                  <FiShoppingBag size={24} />
+                </div>
                 <div>
-                  <p>{selectedDate ? `${selectedDate} ${selectedMonth.slice(0, 3)} Spent` : "Total Spent"}</p>
-                  <h2>₹{(selectedDate ? dateTotal : totalSpent).toLocaleString()}</h2>
+                  <p>
+                    {selectedDate
+                      ? `${selectedDate} ${selectedMonth.slice(0, 3)} Spent`
+                      : "Total Spent"}
+                  </p>
+                  <h2>
+                    ₹{(selectedDate ? dateTotal : totalSpent).toLocaleString()}
+                  </h2>
                 </div>
               </div>
+
               <div className="summary-card blue">
-                <div className="summary-icon"><FiList size={24} /></div>
+                <div className="summary-icon">
+                  <FiList size={24} />
+                </div>
                 <div>
                   <p>{selectedDate ? "Day Transactions" : "Total Orders"}</p>
-                  <h2>{selectedDate ? displayExpenses.length : totalOrders}</h2>
+                  <h2>
+                    {selectedDate ? displayExpenses.length : totalOrders}
+                  </h2>
                 </div>
               </div>
+
               <div className="summary-card green">
-                <div className="summary-icon"><FiTrendingUp size={24} /></div>
+                <div className="summary-icon">
+                  <FiTrendingUp size={24} />
+                </div>
                 <div>
                   <p>Avg Order Value</p>
                   <h2>₹{avgOrderValue.toLocaleString()}</h2>
                 </div>
               </div>
+
               <div className="summary-card purple">
-                <div className="summary-icon"><FiCalendar size={24} /></div>
+                <div className="summary-icon">
+                  <FiCalendar size={24} />
+                </div>
                 <div>
                   <p>Viewing</p>
                   <h2>
@@ -230,20 +270,27 @@ export default function ExpenseTracker() {
               </div>
             ) : (
               <>
-                {/* ── Charts Row — Bar + Pie ── */}
+                {/* Bar + Pie Charts */}
                 <div className="charts-row">
                   <div className="chart-card wide">
                     <h3>Daily Spending — {selectedMonth}</h3>
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={dailyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#f0f0f0"
+                        />
                         <XAxis dataKey="day" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip
                           formatter={(val) => [`₹${val}`, "Spent"]}
                           contentStyle={{ borderRadius: "8px" }}
                         />
-                        <Bar dataKey="amount" fill="#e85d04" radius={[6, 6, 0, 0]} />
+                        <Bar
+                          dataKey="amount"
+                          fill="#e85d04"
+                          radius={[6, 6, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -265,7 +312,10 @@ export default function ExpenseTracker() {
                           labelLine={false}
                         >
                           {categoryData.map((_, index) => (
-                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                            <Cell
+                              key={index}
+                              fill={COLORS[index % COLORS.length]}
+                            />
                           ))}
                         </Pie>
                         <Tooltip formatter={(val) => `₹${val}`} />
@@ -275,12 +325,15 @@ export default function ExpenseTracker() {
                   </div>
                 </div>
 
-                {/* ── Line Chart — Monthly Trend ── */}
+                {/* Line Chart */}
                 <div className="chart-card full">
                   <h3>Monthly Spending Trend — {selectedYear}</h3>
                   <ResponsiveContainer width="100%" height={260}>
                     <LineChart data={monthlyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#f0f0f0"
+                      />
                       <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                       <YAxis tick={{ fontSize: 12 }} />
                       <Tooltip
@@ -299,7 +352,7 @@ export default function ExpenseTracker() {
                   </ResponsiveContainer>
                 </div>
 
-                {/* ── Transaction History ── */}
+                {/* Transaction History */}
                 <div className="expense-list-card">
                   <h3>
                     Transaction History —{" "}
@@ -309,10 +362,12 @@ export default function ExpenseTracker() {
                   </h3>
                   <div className="expense-list">
                     {displayExpenses.length === 0 ? (
-                      <p className="no-date-exp">No transactions on this date.</p>
+                      <p className="no-date-exp">
+                        No transactions on this date.
+                      </p>
                     ) : (
                       displayExpenses.map((exp) => (
-                        <div className="expense-row" key={exp.id}>
+                        <div className="expense-row" key={exp._id}>
                           <div className="expense-row-left">
                             <div className="exp-dot" />
                             <div>
@@ -320,26 +375,26 @@ export default function ExpenseTracker() {
                               <span className="exp-cat">{exp.category}</span>
                             </div>
                           </div>
-                          <p className="exp-amount">₹{exp.amount.toLocaleString()}</p>
+                          <p className="exp-amount">
+                            ₹{exp.amount.toLocaleString()}
+                          </p>
                         </div>
                       ))
                     )}
                   </div>
                 </div>
 
-                {/* ── Day-wise Breakdown ── */}
+                {/* Day-wise Breakdown */}
                 <div className="expense-list-card">
-                  <h3>📅 Day-wise Expense Breakdown — {selectedMonth} {selectedYear}</h3>
+                  <h3>
+                    📅 Day-wise Breakdown — {selectedMonth} {selectedYear}
+                  </h3>
                   <div className="daywise-list">
                     {dailyData.map((day, i) => {
                       const dayNumber = parseInt(day.day.split(" ")[1]);
-                      const dayExpenses = displayExpenses.filter((e) => {
-                        const d = e.date?.toDate
-                          ? e.date.toDate().getDate()
-                          : new Date().getDate();
-                        return d === dayNumber;
-                      });
-
+                      const dayExpenses = displayExpenses.filter(
+                        (e) => new Date(e.createdAt).getDate() === dayNumber
+                      );
                       if (dayExpenses.length === 0) return null;
 
                       return (
@@ -347,12 +402,15 @@ export default function ExpenseTracker() {
                           <div className="day-header">
                             <div className="day-badge">
                               <span className="day-num">{dayNumber}</span>
-                              <span className="day-month">{selectedMonth.slice(0, 3)}</span>
+                              <span className="day-month">
+                                {selectedMonth.slice(0, 3)}
+                              </span>
                             </div>
                             <div className="day-header-info">
                               <p className="day-label">{day.day}</p>
                               <span className="day-item-count">
-                                {dayExpenses.length} transaction{dayExpenses.length > 1 ? "s" : ""}
+                                {dayExpenses.length} transaction
+                                {dayExpenses.length > 1 ? "s" : ""}
                               </span>
                             </div>
                             <div className="day-total-amount">
@@ -362,7 +420,7 @@ export default function ExpenseTracker() {
 
                           <div className="day-items">
                             {dayExpenses.map((exp) => (
-                              <div className="day-item-row" key={exp.id}>
+                              <div className="day-item-row" key={exp._id}>
                                 <div className="day-item-left">
                                   <span
                                     className="day-item-dot"
@@ -376,8 +434,12 @@ export default function ExpenseTracker() {
                                     }}
                                   />
                                   <div>
-                                    <p className="day-item-name">{exp.name}</p>
-                                    <span className="day-item-cat">{exp.category}</span>
+                                    <p className="day-item-name">
+                                      {exp.name}
+                                    </p>
+                                    <span className="day-item-cat">
+                                      {exp.category}
+                                    </span>
                                   </div>
                                 </div>
                                 <span className="day-item-amount">
@@ -391,7 +453,6 @@ export default function ExpenseTracker() {
                     })}
                   </div>
                 </div>
-
               </>
             )}
           </>

@@ -1,37 +1,37 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import "./i18n/i18n"; // init i18n before anything else
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { AdminProvider, useAdmin } from "./context/AdminContext";
+import { WishlistProvider } from "./context/WishlistContext";
+import { useEffect } from "react";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
+import Wishlist from "./pages/Wishlist";
 import Cart from "./pages/Cart";
 import ExpenseTracker from "./pages/ExpenseTracker";
 import UserProfile from "./pages/UserProfile";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+import OrderSuccess from "./pages/OrderSuccess";
+import AIChatWidget from "./components/AIChatWidget/AIChatWidget";
 
-// ── Public Route ──
-// Allow access always — only redirect if already in admin session
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
   const isAdminSession = localStorage.getItem("isAdminSession") === "true";
-
-  // If already in admin session → go to admin
   if (user && isAdminSession) return <Navigate to="/admin" replace />;
-
-  // Otherwise always show login/signup page
-  // Even if logged in as customer they can access login page
   return children;
 };
 
-// ── Protected Route ──
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;
 };
 
-// ── Admin Route ──
 const AdminRoute = ({ children }) => {
   const { user } = useAuth();
   const { isAdmin, adminLoading } = useAdmin();
@@ -39,112 +39,93 @@ const AdminRoute = ({ children }) => {
   if (adminLoading) {
     return (
       <div style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "16px",
-        background: "#f8f9fa"
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: "16px",
+        background: "#0f172a",
       }}>
         <div style={{
-          width: "40px",
-          height: "40px",
-          border: "4px solid #f0f0f0",
-          borderTopColor: "#e85d04",
-          borderRadius: "50%",
-          animation: "spin 0.8s linear infinite"
+          width: "40px", height: "40px",
+          border: "3px solid rgba(255,255,255,0.1)",
+          borderTopColor: "#ea580c", borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
         }} />
-        <p style={{ color: "#888", fontSize: "16px" }}>
-          Verifying admin access...
+        <p style={{ color: "#64748b", fontSize: "14px", fontFamily: "Inter,sans-serif" }}>
+          Verifying admin access…
         </p>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
 
   if (!user) return <Navigate to="/login" replace />;
-
   const isAdminSession = localStorage.getItem("isAdminSession") === "true";
-
-  if (!isAdmin || !isAdminSession) {
-    return <Navigate to="/home" replace />;
-  }
-
+  if (!isAdmin || !isAdminSession) return <Navigate to="/home" replace />;
   return children;
 };
 
-// ── App Routes ──
-function AppRoutes() {
+function AnimatedRoutes() {
   const { user } = useAuth();
+  const location = useLocation();
   const isAdminSession = localStorage.getItem("isAdminSession") === "true";
 
+  useEffect(() => {
+    const handleBack = () => {
+      const admin = localStorage.getItem("isAdminSession") === "true";
+      window.history.pushState(null, "", admin ? "/admin" : "/home");
+    };
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handleBack);
+    return () => window.removeEventListener("popstate", handleBack);
+  }, []);
+
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Navigate
-            to={
-              user && isAdminSession
-                ? "/admin"
-                : user
-                ? "/home"
-                : "/login"
-            }
-            replace
-          />
-        }
-      />
-
-      {/* Login and Signup — accessible always */}
-      <Route
-        path="/login"
-        element={<PublicRoute><Login /></PublicRoute>}
-      />
-      <Route
-        path="/signup"
-        element={<PublicRoute><Signup /></PublicRoute>}
-      />
-
-      {/* Protected Routes */}
-      <Route
-        path="/home"
-        element={<ProtectedRoute><Home /></ProtectedRoute>}
-      />
-      <Route
-        path="/products"
-        element={<ProtectedRoute><Products /></ProtectedRoute>}
-      />
-      <Route
-        path="/cart"
-        element={<ProtectedRoute><Cart /></ProtectedRoute>}
-      />
-      <Route
-        path="/expense-tracker"
-        element={<ProtectedRoute><ExpenseTracker /></ProtectedRoute>}
-      />
-      <Route
-        path="/profile"
-        element={<ProtectedRoute><UserProfile /></ProtectedRoute>}
-      />
-
-      {/* Admin Route */}
-      <Route
-        path="/admin"
-        element={<AdminRoute><AdminDashboard /></AdminRoute>}
-      />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={
+          <Navigate to={user && isAdminSession ? "/admin" : user ? "/home" : "/login"} replace />
+        } />
+        <Route path="/login"        element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/signup"       element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/home"         element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/products"     element={<ProtectedRoute><Products /></ProtectedRoute>} />
+        <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+        <Route path="/wishlist"     element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/cart"         element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="/expense-tracker" element={<ProtectedRoute><ExpenseTracker /></ProtectedRoute>} />
+        <Route path="/profile"      element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+        <Route path="/admin"        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 
-// ── App ──
 function App() {
   return (
     <Router>
       <AuthProvider>
         <AdminProvider>
           <CartProvider>
-            <AppRoutes />
+            <WishlistProvider>
+              <AnimatedRoutes />
+              <AIChatWidget />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: "#1e293b",
+                    color: "#f8fafc",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    fontFamily: "Inter, sans-serif",
+                  },
+                  success: { iconTheme: { primary: "#22c55e", secondary: "#fff" } },
+                  error:   { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
+                }}
+              />
+            </WishlistProvider>
           </CartProvider>
         </AdminProvider>
       </AuthProvider>

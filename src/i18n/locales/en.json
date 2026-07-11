@@ -1,0 +1,68 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "expenses": "Expenses",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "home": {
+    "badge": "New Arrivals Every Day",
+    "title1": "Shop Smart.",
+    "title2": "Track Smarter.",
+    "subtitle": "Discover thousands of products and keep track of every rupee you spend — all in one place.",
+    "shopNow": "Shop Now",
+    "viewExpenses": "View Expenses"
+  },
+  "products": {
+    "title": "Products",
+    "search": "Search products...",
+    "filter": "Filter",
+    "allCategories": "All Categories",
+    "sortBy": "Sort by",
+    "addToCart": "Add to Cart",
+    "outOfStock": "Out of Stock",
+    "noProducts": "No products found"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "emptyDesc": "Add some products to get started",
+    "shopNow": "Shop Now",
+    "subtotal": "Subtotal",
+    "tax": "GST (18%)",
+    "delivery": "Delivery",
+    "free": "FREE",
+    "total": "Grand Total",
+    "placeOrder": "Place Order",
+    "couponPlaceholder": "Enter coupon code",
+    "applyCoupon": "Apply",
+    "couponApplied": "Coupon applied!",
+    "discount": "Discount"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "user": "User",
+    "admin": "Admin",
+    "loginBtn": "Login →",
+    "signupBtn": "Create Account →",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "back": "Back"
+  }
+}

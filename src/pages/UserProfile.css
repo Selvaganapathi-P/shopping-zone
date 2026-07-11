@@ -369,3 +369,191 @@
     min-width: 100%;
   }
 }
+/* ── Profile Tabs ── */
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.profile-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.profile-tab.active {
+  background: #fff;
+  color: #ea580c;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* ── Address Book ── */
+.addr-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.addr-book-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.addr-book-card.default {
+  border-color: rgba(234,88,12,0.4);
+  background: #fff8f5;
+}
+
+.addr-book-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.addr-label-chip {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ea580c;
+  background: rgba(234,88,12,0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.addr-default-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34,197,94,0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.addr-book-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.addr-book-line {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.addr-book-phone {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.addr-book-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.addr-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.addr-action-btn:hover { border-color: #ea580c; color: #ea580c; }
+.addr-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+.addr-loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+/* ── Address Form Modal ── */
+.profile-addr-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.addr-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1e293b;
+  background: #fff;
+  font-family: inherit;
+  outline: none;
+}
+
+.addr-select:focus { border-color: #ea580c; }
+
+.addr-form .form-group input,
+.addr-form .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.addr-default-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.addr-default-check input[type="checkbox"] {
+  accent-color: #ea580c;
+  width: 16px;
+  height: 16px;
+}

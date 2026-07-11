@@ -1,39 +1,36 @@
 import { useState, useEffect } from "react";
-import { db } from "../../firebase/config";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { useAuth } from "../../context/AuthContext";
+import API from "../../api/axios";
 import { FiX, FiMapPin } from "react-icons/fi";
 import "./AddressModal.css";
 
 export default function AddressModal({ onConfirm, onClose }) {
-  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    pincode: "",
-    landmark: "",
+    name: "", phone: "", addressLine1: "",
+    addressLine2: "", city: "", state: "",
+    pincode: "", landmark: "",
   });
 
-  // Load existing address if any
   useEffect(() => {
     const load = async () => {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (snap.exists()) {
-        setForm(snap.data());
-      } else {
-        setForm((prev) => ({
-          ...prev,
-          fullName: user.displayName || "",
-        }));
+      try {
+        const { data } = await API.get("/auth/profile");
+        setForm({
+          name:         data.name         || "",
+          phone:        data.phone        || "",
+          addressLine1: data.addressLine1 || "",
+          addressLine2: data.addressLine2 || "",
+          city:         data.city         || "",
+          state:        data.state        || "",
+          pincode:      data.pincode      || "",
+          landmark:     data.landmark     || "",
+        });
+      } catch (err) {
+        console.error(err);
       }
     };
     load();
-  }, [user]);
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -43,11 +40,7 @@ export default function AddressModal({ onConfirm, onClose }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await setDoc(doc(db, "users", user.uid), {
-        ...form,
-        email: user.email,
-        updatedAt: new Date().toISOString(),
-      });
+      await API.put("/auth/profile", form);
       onConfirm(form);
     } catch (err) {
       console.error(err);
@@ -58,8 +51,6 @@ export default function AddressModal({ onConfirm, onClose }) {
   return (
     <div className="modal-overlay">
       <div className="modal-box">
-
-        {/* Header */}
         <div className="modal-header">
           <div className="modal-title">
             <FiMapPin size={20} />
@@ -71,7 +62,7 @@ export default function AddressModal({ onConfirm, onClose }) {
         </div>
 
         <p className="modal-subtitle">
-          Please confirm your delivery address before placing the order.
+          Confirm your delivery address before placing the order.
         </p>
 
         <form onSubmit={handleConfirm} className="modal-form">
@@ -79,8 +70,8 @@ export default function AddressModal({ onConfirm, onClose }) {
             <div className="modal-group">
               <label>Full Name *</label>
               <input
-                name="fullName"
-                value={form.fullName}
+                name="name"
+                value={form.name}
                 onChange={handleChange}
                 placeholder="Full name"
                 required
@@ -183,7 +174,6 @@ export default function AddressModal({ onConfirm, onClose }) {
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );
