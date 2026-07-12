@@ -1,75 +1,136 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, ShoppingBag, Lock, Mail, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import "./Auth.css";
 
-const PARTICLE_COUNT = 60;
+/* ── Animated cat mascot ─────────────────────────────────────────────────── */
+function CatMascot({ catState }) {
+  const sp       = { type: "spring", stiffness: 260, damping: 22 };
+  const isHiding = catState === "hiding";
+  const isWatch  = catState === "watching";
 
-function StarField() {
-  const canvasRef = useRef(null);
+  return (
+    <div className="cat-wrap" aria-hidden="true">
+      <svg viewBox="0 0 200 200" width="160" height="160" style={{ overflow: "visible", display: "block" }}>
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let raf;
+        {/* ── Left paw — swings up + rotates inward when hiding ── */}
+        <motion.g
+          animate={{ y: isHiding ? -76 : 0, rotate: isHiding ? -22 : 0 }}
+          transition={sp}
+          style={{ transformOrigin: "72px 162px", transformBox: "fill-box" }}
+        >
+          <ellipse cx="72"  cy="164" rx="28" ry="18" fill="#FF8C42" />
+          <ellipse cx="59"  cy="175" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="72"  cy="181" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="85"  cy="175" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="72"  cy="171" rx="17" ry="11" fill="#FFBEA0" opacity="0.7" />
+        </motion.g>
 
-    const resize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
+        {/* ── Right paw ── */}
+        <motion.g
+          animate={{ y: isHiding ? -76 : 0, rotate: isHiding ? 22 : 0 }}
+          transition={sp}
+          style={{ transformOrigin: "128px 162px", transformBox: "fill-box" }}
+        >
+          <ellipse cx="128" cy="164" rx="28" ry="18" fill="#FF8C42" />
+          <ellipse cx="115" cy="175" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="128" cy="181" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="141" cy="175" rx="11" ry="9"  fill="#FF8C42" />
+          <ellipse cx="128" cy="171" rx="17" ry="11" fill="#FFBEA0" opacity="0.7" />
+        </motion.g>
 
-    const stars = Array.from({ length: PARTICLE_COUNT }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.4 + 0.1,
-      alpha: Math.random(),
-      dAlpha: (Math.random() * 0.01 + 0.004) * (Math.random() > 0.5 ? 1 : -1),
-    }));
+        {/* ── Ears ── */}
+        <polygon points="47,58 62,16 84,52"  fill="#FF8C42" />
+        <polygon points="55,54 64,22 80,50"  fill="#FFBEA0" />
+        <polygon points="153,58 138,16 116,52" fill="#FF8C42" />
+        <polygon points="145,54 136,22 120,50" fill="#FFBEA0" />
 
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const s of stars) {
-        s.y -= s.speed;
-        s.alpha += s.dAlpha;
-        if (s.alpha <= 0 || s.alpha >= 1) s.dAlpha *= -1;
-        if (s.y < 0) { s.y = canvas.height; s.x = Math.random() * canvas.width; }
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(1, s.alpha));
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
+        {/* ── Head ── */}
+        <circle cx="100" cy="92" r="62" fill="#FF8C42" />
 
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
+        {/* ── Face patch ── */}
+        <ellipse cx="100" cy="107" rx="40" ry="32" fill="#FFF3EA" />
 
-  return <canvas ref={canvasRef} className="star-canvas" aria-hidden />;
+        {/* ── Forehead tabby stripe ── */}
+        <path d="M86,36 Q100,28 114,36" stroke="#D97A30" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M90,29 Q100,23 110,29" stroke="#D97A30" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+        {/* ── Left brow (rises when watching, relaxes when hiding) ── */}
+        <motion.g
+          animate={{ y: isWatch ? -4 : isHiding ? 2 : 0 }}
+          transition={sp}
+          style={{ transformOrigin: "78px 69px", transformBox: "fill-box" }}
+        >
+          <path d="M64,71 Q79,65 91,71" stroke="#C97828" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        </motion.g>
+
+        {/* ── Right brow ── */}
+        <motion.g
+          animate={{ y: isWatch ? -4 : isHiding ? 2 : 0 }}
+          transition={sp}
+          style={{ transformOrigin: "122px 69px", transformBox: "fill-box" }}
+        >
+          <path d="M109,71 Q121,65 136,71" stroke="#C97828" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        </motion.g>
+
+        {/* ── Left eye (scaleY: 1.2 = wide open, 0.07 = closed slit) ── */}
+        <motion.g
+          animate={{ scaleY: isHiding ? 0.07 : isWatch ? 1.22 : 1 }}
+          transition={sp}
+          style={{ transformOrigin: "78px 85px", transformBox: "fill-box" }}
+        >
+          <ellipse cx="78"  cy="85" rx="16" ry="14" fill="white" />
+          <ellipse cx="78"  cy="85" rx="10" ry="10" fill="#10B981" />
+          <ellipse cx="78"  cy="85" rx="4.5" ry="8" fill="#111827" />
+          <circle  cx="85"  cy="79" r="3.5" fill="white" />
+        </motion.g>
+
+        {/* ── Right eye ── */}
+        <motion.g
+          animate={{ scaleY: isHiding ? 0.07 : isWatch ? 1.22 : 1 }}
+          transition={sp}
+          style={{ transformOrigin: "122px 85px", transformBox: "fill-box" }}
+        >
+          <ellipse cx="122" cy="85" rx="16" ry="14" fill="white" />
+          <ellipse cx="122" cy="85" rx="10" ry="10" fill="#10B981" />
+          <ellipse cx="122" cy="85" rx="4.5" ry="8" fill="#111827" />
+          <circle  cx="129" cy="79" r="3.5" fill="white" />
+        </motion.g>
+
+        {/* ── Nose ── */}
+        <polygon points="97,113 100,119 103,113" fill="#FF6BAD" />
+
+        {/* ── Mouth ── */}
+        <path d="M94,120 Q100,128 106,120" stroke="#B07850" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+
+        {/* ── Whiskers ── */}
+        <line x1="40"  y1="110" x2="76"  y2="117" stroke="#C9A082" strokeWidth="1.5" opacity="0.6" />
+        <line x1="40"  y1="118" x2="76"  y2="118" stroke="#C9A082" strokeWidth="1.5" opacity="0.6" />
+        <line x1="124" y1="117" x2="160" y2="110" stroke="#C9A082" strokeWidth="1.5" opacity="0.6" />
+        <line x1="124" y1="118" x2="160" y2="118" stroke="#C9A082" strokeWidth="1.5" opacity="0.6" />
+
+        {/* ── Cheek blush dots ── */}
+        <circle cx="58"  cy="106" r="8" fill="#FF8C42" opacity="0.18" />
+        <circle cx="142" cy="106" r="8" fill="#FF8C42" opacity="0.18" />
+      </svg>
+    </div>
+  );
 }
 
+/* ── Login Page ──────────────────────────────────────────────────────────── */
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
-  const [email, setEmail]       = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [catState, setCatState] = useState("idle");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -90,66 +151,86 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <StarField />
-      <div className="auth-orb auth-orb-1" aria-hidden />
-      <div className="auth-orb auth-orb-2" aria-hidden />
+      <div className="auth-blob auth-blob-1" />
+      <div className="auth-blob auth-blob-2" />
+      <div className="auth-blob auth-blob-3" />
 
       <motion.div
-        className="auth-card"
-        initial={{ opacity: 0, y: 32, scale: 0.96 }}
+        className="auth-card-outer"
+        initial={{ opacity: 0, y: 36, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="auth-brand">
-          <div className="auth-brand-icon"><ShoppingBag size={24} /></div>
-          <h1 className="auth-brand-name">Thansel Zovia</h1>
-        </div>
+        <CatMascot catState={catState} />
 
-        <div className="auth-toggle">
-          <span className="auth-toggle-btn active">Login</span>
-          <Link to="/signup" className="auth-toggle-btn">Sign Up</Link>
-        </div>
-
-        <div className="auth-title-section">
-          <h2>Welcome Back 👋</h2>
-          <p>Sign in to continue shopping</p>
-        </div>
-
-        {error && (
-          <motion.div className="auth-error" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-            <AlertCircle size={15} /> {error}
-          </motion.div>
-        )}
-
-        <form onSubmit={handleLogin} className="auth-form">
-          <div className="input-group">
-            <label>Email Address</label>
-            <div className="input-wrap">
-              <Mail size={16} className="input-icon" />
-              <input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
+        <div className="auth-card">
+          <div className="auth-brand">
+            <span className="auth-brand-emoji">🛍️</span>
+            <h1 className="auth-brand-name">Thansel Zovia</h1>
           </div>
 
-          <div className="input-group">
-            <label>Password</label>
-            <div className="input-wrap">
-              <Lock size={16} className="input-icon" />
-              <input type={showPass ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              <button type="button" className="toggle-pass" onClick={() => setShowPass(!showPass)} tabIndex={-1}>
-                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+          <div className="auth-toggle">
+            <span className="auth-toggle-btn active">Login</span>
+            <Link to="/signup" className="auth-toggle-btn">Sign Up</Link>
           </div>
 
-          <button className="auth-submit" type="submit" disabled={loading}>
-            {loading ? <span className="auth-spinner" /> : "Login →"}
-          </button>
-        </form>
+          <h2 className="auth-heading">Welcome back</h2>
+          <p className="auth-subheading">Sign in to continue shopping</p>
 
-        <p className="auth-switch">
-          Don't have an account?{" "}
-          <Link to="/signup" className="auth-link">Sign Up</Link>
-        </p>
+          {error && (
+            <motion.div className="auth-error" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+              <AlertCircle size={15} /> {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleLogin} className="auth-form">
+            <div className="input-group">
+              <label htmlFor="auth-email">Email address</label>
+              <div className="input-wrap">
+                <Mail size={16} className="input-icon" />
+                <input
+                  id="auth-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setCatState("watching")}
+                  onBlur={() => { if (!password) setCatState("idle"); }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="auth-pass">Password</label>
+              <div className="input-wrap">
+                <Lock size={16} className="input-icon" />
+                <input
+                  id="auth-pass"
+                  type={showPass ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setCatState("hiding")}
+                  onBlur={() => setCatState("idle")}
+                  required
+                />
+                <button type="button" className="toggle-pass" onClick={() => setShowPass(!showPass)} tabIndex={-1}>
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button className="auth-submit" type="submit" disabled={loading}>
+              {loading ? <span className="auth-spinner" /> : "Sign in →"}
+            </button>
+          </form>
+
+          <p className="auth-switch">
+            Don't have an account?{" "}
+            <Link to="/signup" className="auth-link">Create one free</Link>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

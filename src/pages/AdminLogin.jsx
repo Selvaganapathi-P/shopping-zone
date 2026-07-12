@@ -1,44 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 import "./Auth.css";
-
-const PARTICLE_COUNT = 60;
-
-function StarField() {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let raf;
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-    const stars = Array.from({ length: PARTICLE_COUNT }, () => ({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3, speed: Math.random() * 0.4 + 0.1,
-      alpha: Math.random(), dAlpha: (Math.random() * 0.01 + 0.004) * (Math.random() > 0.5 ? 1 : -1),
-    }));
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const s of stars) {
-        s.y -= s.speed; s.alpha += s.dAlpha;
-        if (s.alpha <= 0 || s.alpha >= 1) s.dAlpha *= -1;
-        if (s.y < 0) { s.y = canvas.height; s.x = Math.random() * canvas.width; }
-        ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, s.alpha));
-        ctx.fillStyle = "#ffffff"; ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-      }
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(raf); };
-  }, []);
-  return <canvas ref={canvasRef} className="star-canvas" aria-hidden />;
-}
 
 export default function AdminLogin() {
   const { adminLogin } = useAuth();
@@ -68,9 +33,8 @@ export default function AdminLogin() {
 
   return (
     <div className="auth-page">
-      <StarField />
-      <div className="auth-orb auth-orb-1" aria-hidden />
-      <div className="auth-orb auth-orb-2" aria-hidden />
+      <div className="auth-blob auth-blob-1" />
+      <div className="auth-blob auth-blob-2" />
 
       <motion.div
         className="auth-card"

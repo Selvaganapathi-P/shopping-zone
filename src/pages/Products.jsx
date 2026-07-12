@@ -422,8 +422,12 @@ export default function Products() {
                       style={{ cursor: "pointer" }}
                     >
                       <div className="product-img-wrap">
-                        <img src={product.image} alt={product.name} loading="lazy"
-                          onError={(e) => { e.target.src = "https://placehold.co/400x300/1e293b/64748b?text=No+Image"; }} />
+                        <img
+                          src={product.image || "https://placehold.co/400x300/F4F4F8/9898B0?text=No+Image"}
+                          alt={product.name}
+                          loading="lazy"
+                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300/F4F4F8/9898B0?text=No+Image"; }}
+                        />
                         <span className="product-category-badge">{product.category}</span>
                         <motion.button
                           className={`product-wish-btn ${wishlisted ? "wishlisted" : ""}`}

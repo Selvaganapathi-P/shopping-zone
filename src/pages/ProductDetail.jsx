@@ -187,7 +187,7 @@ export default function ProductDetail() {
               <div className="pd-image-wrap">
                 <img
                   src={imgError
-                    ? `https://placehold.co/600x600/1e293b/64748b?text=${encodeURIComponent(product.name.split(" ")[0])}`
+                    ? `https://placehold.co/600x600/F4F4F8/9898B0?text=${encodeURIComponent(product.name.split(" ")[0])}`
                     : activeImgSrc
                   }
                   alt={product.name}
@@ -212,7 +212,7 @@ export default function ProductDetail() {
                       className={`pd-thumb-btn ${activeImg === i ? "active" : ""}`}
                       onClick={() => { setActiveImg(i); setImgError(false); }}
                     >
-                      <img src={img} alt={`view ${i + 1}`} onError={(e) => { e.target.src = "https://placehold.co/80x80/1e293b/64748b?text=?"; }} />
+                      <img src={img} alt={`view ${i + 1}`} onError={(e) => { e.target.src = "https://placehold.co/80x80/F4F4F8/9898B0?text=?"; }} />
                     </button>
                   ))}
                 </div>
@@ -308,7 +308,7 @@ export default function ProductDetail() {
                   onClick={() => navigate(`/products/${p._id}`)}
                 >
                   <div className="pd-related-img">
-                    <img src={p.image} alt={p.name} onError={(e) => { e.target.src = "https://placehold.co/200x160/1e293b/64748b?text=No+Image"; }} />
+                    <img src={p.image} alt={p.name} onError={(e) => { e.target.src = "https://placehold.co/200x160/F4F4F8/9898B0?text=No+Image"; }} />
                   </div>
                   <div className="pd-related-info">
                     <p className="pd-related-name">{p.name}</p>
@@ -337,7 +337,7 @@ export default function ProductDetail() {
                   onClick={() => navigate(`/products/${p._id}`)}
                 >
                   <div className="pd-related-img">
-                    <img src={p.image} alt={p.name} onError={(e) => { e.target.src = "https://placehold.co/200x160/1e293b/64748b?text=No+Image"; }} />
+                    <img src={p.image} alt={p.name} onError={(e) => { e.target.src = "https://placehold.co/200x160/F4F4F8/9898B0?text=No+Image"; }} />
                   </div>
                   <div className="pd-related-info">
                     <p className="pd-related-name">{p.name}</p>
