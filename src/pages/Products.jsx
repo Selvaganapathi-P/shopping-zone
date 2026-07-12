@@ -46,12 +46,6 @@ function SkeletonCard() {
   );
 }
 
-const cardVariants = {
-  hidden:  { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } },
-  exit:    { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
-};
-
 // Voice search using Web Speech API
 function useVoiceSearch(onResult, lang = "en-IN") {
   const [listening, setListening] = useState(false);
