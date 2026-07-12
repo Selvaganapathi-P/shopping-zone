@@ -64,7 +64,7 @@ const AdminRoute = ({ children }) => {
 };
 
 function AnimatedRoutes() {
-  const { user } = useAuth();
+  useAuth();
   const location = useLocation();
 
   useEffect(() => {

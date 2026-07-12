@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Shield } from "lucide-react";
 import toast from "react-hot-toast";
@@ -43,7 +42,6 @@ function StarField() {
 
 export default function AdminLogin() {
   const { adminLogin } = useAuth();
-  const navigate = useNavigate();
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
