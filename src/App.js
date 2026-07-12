@@ -9,6 +9,7 @@ import { WishlistProvider } from "./context/WishlistContext";
 import { useEffect } from "react";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AdminLogin from "./pages/AdminLogin";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -22,8 +23,7 @@ import AIChatWidget from "./components/AIChatWidget/AIChatWidget";
 
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
-  const isAdminSession = localStorage.getItem("isAdminSession") === "true";
-  if (user && isAdminSession) return <Navigate to="/admin" replace />;
+  if (user) return <Navigate to="/home" replace />;
   return children;
 };
 
@@ -66,7 +66,6 @@ const AdminRoute = ({ children }) => {
 function AnimatedRoutes() {
   const { user } = useAuth();
   const location = useLocation();
-  const isAdminSession = localStorage.getItem("isAdminSession") === "true";
 
   useEffect(() => {
     const handleBack = () => {
@@ -81,19 +80,25 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={
-          <Navigate to={user && isAdminSession ? "/admin" : user ? "/home" : "/login"} replace />
-        } />
+        {/* Public — anyone can browse */}
+        <Route path="/"             element={<Navigate to="/home" replace />} />
+        <Route path="/home"         element={<Home />} />
+        <Route path="/products"     element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+
+        {/* Auth pages */}
         <Route path="/login"        element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup"       element={<PublicRoute><Signup /></PublicRoute>} />
-        <Route path="/home"         element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/products"     element={<ProtectedRoute><Products /></ProtectedRoute>} />
-        <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
-        <Route path="/wishlist"     element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-        <Route path="/cart"         element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+
+        {/* Protected — login required */}
+        <Route path="/wishlist"        element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/cart"            element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="/expense-tracker" element={<ProtectedRoute><ExpenseTracker /></ProtectedRoute>} />
-        <Route path="/profile"      element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-        <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+        <Route path="/profile"         element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path="/order-success"   element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+
+        {/* Admin — hidden, not linked anywhere */}
+        <Route path="/admin-login"  element={<AdminLogin />} />
         <Route path="/admin"        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       </Routes>
     </AnimatePresence>

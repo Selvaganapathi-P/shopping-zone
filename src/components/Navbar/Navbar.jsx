@@ -89,11 +89,15 @@ export default function Navbar({ transparent = false }) {
 
             {/* Cart */}
             <li>
-              <Link to="/cart" className={`nav-link cart-nav-link ${isActive("/cart") ? "active" : ""}`}>
+              <Link
+                to={user ? "/cart" : "/login?redirect=/cart"}
+                className={`nav-link cart-nav-link ${isActive("/cart") ? "active" : ""}`}
+                onClick={() => { if (!user) { import("react-hot-toast").then(m => m.default.error("Please sign in to view your cart")); } }}
+              >
                 <div className="cart-icon-wrap">
                   <ShoppingCart size={18} />
                   <AnimatePresence>
-                    {cartCount > 0 && (
+                    {cartCount > 0 && user && (
                       <motion.span
                         className="cart-badge"
                         key="badge"
@@ -114,122 +118,78 @@ export default function Navbar({ transparent = false }) {
 
           {/* Right side */}
           <div className="navbar-right">
-            {/* Expense tracker button */}
-            <button
-              className="expense-btn"
-              onClick={() => navigate("/expense-tracker")}
-              title="Expense Tracker"
-            >
-              <BarChart2 size={16} />
-              <span>Expenses</span>
-            </button>
+            {user ? (
+              <>
+                <button className="expense-btn" onClick={() => navigate("/expense-tracker")} title="Expense Tracker">
+                  <BarChart2 size={16} /><span>Expenses</span>
+                </button>
 
-            {/* Profile dropdown */}
-            <div className="profile-wrapper" ref={dropdownRef}>
-              <button
-                className="profile-trigger"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                aria-expanded={dropdownOpen}
-              >
-                <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true`}
-                  alt="avatar"
-                  className="profile-avatar"
-                />
-                <ChevronDown
-                  size={14}
-                  className={`chevron ${dropdownOpen ? "open" : ""}`}
-                />
-              </button>
+                <div className="profile-wrapper" ref={dropdownRef}>
+                  <button className="profile-trigger" onClick={() => setDropdownOpen(!dropdownOpen)} aria-expanded={dropdownOpen}>
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true`} alt="avatar" className="profile-avatar" />
+                    <ChevronDown size={14} className={`chevron ${dropdownOpen ? "open" : ""}`} />
+                  </button>
 
-              <AnimatePresence>
-                {dropdownOpen && (
-                  <motion.div
-                    className="profile-dropdown"
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0,  scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <div className="dropdown-header">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true&size=80`}
-                        alt="avatar"
-                        className="dropdown-avatar"
-                      />
-                      <p className="dropdown-name">{user?.name || "User"}</p>
-                      <p className="dropdown-email">{user?.email}</p>
-                    </div>
+                  <AnimatePresence>
+                    {dropdownOpen && (
+                      <motion.div className="profile-dropdown" initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }} transition={{ duration: 0.15 }}>
+                        <div className="dropdown-header">
+                          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=ea580c&color=fff&bold=true&size=80`} alt="avatar" className="dropdown-avatar" />
+                          <p className="dropdown-name">{user?.name || "User"}</p>
+                          <p className="dropdown-email">{user?.email}</p>
+                        </div>
+                        <div className="dropdown-menu">
+                          <button className="dropdown-item" onClick={() => { navigate("/profile"); setDropdownOpen(false); }}>
+                            <User size={15} /> My Profile
+                          </button>
+                          {user?.isAdmin && (
+                            <button className="dropdown-item dropdown-item-admin" onClick={() => { navigate("/admin"); setDropdownOpen(false); }}>
+                              <LayoutDashboard size={15} /> Admin Dashboard
+                            </button>
+                          )}
+                          <div className="dropdown-divider" />
+                          <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                            <LogOut size={15} /> Logout
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div className="navbar-auth-btns">
+                <Link to="/login" className="nav-login-btn">Login</Link>
+                <Link to="/signup" className="nav-signup-btn">Sign Up</Link>
+              </div>
+            )}
 
-                    <div className="dropdown-menu">
-                      <button
-                        className="dropdown-item"
-                        onClick={() => { navigate("/profile"); setDropdownOpen(false); }}
-                      >
-                        <User size={15} /> My Profile
-                      </button>
-
-                      {user?.isAdmin && (
-                        <button
-                          className="dropdown-item dropdown-item-admin"
-                          onClick={() => { navigate("/admin"); setDropdownOpen(false); }}
-                        >
-                          <LayoutDashboard size={15} /> Admin Dashboard
-                        </button>
-                      )}
-
-                      <div className="dropdown-divider" />
-
-                      <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
-                        <LogOut size={15} /> Logout
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Mobile hamburger */}
-            <button
-              className="mobile-menu-btn"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
-            >
+            <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.2 }}
-          >
-            {[
-              { path: "/home",             label: "Home" },
-              { path: "/products",         label: "Products" },
-              { path: "/cart",             label: `Cart (${cartCount})` },
-              { path: "/expense-tracker",  label: "Expenses" },
-              { path: "/profile",          label: "My Profile" },
-            ].map(({ path, label }) => (
-              <Link key={path} to={path} className={`mobile-link ${isActive(path) ? "active" : ""}`}>
-                {label}
-              </Link>
-            ))}
-            {user?.isAdmin && (
-              <Link to="/admin" className="mobile-link mobile-link-admin">
-                Admin Dashboard
-              </Link>
+          <motion.div className="mobile-menu" initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.2 }}>
+            <Link to="/home"     className={`mobile-link ${isActive("/home") ? "active" : ""}`}>Home</Link>
+            <Link to="/products" className={`mobile-link ${isActive("/products") ? "active" : ""}`}>Products</Link>
+            {user ? (
+              <>
+                <Link to="/cart"            className={`mobile-link ${isActive("/cart") ? "active" : ""}`}>Cart ({cartCount})</Link>
+                <Link to="/expense-tracker" className={`mobile-link ${isActive("/expense-tracker") ? "active" : ""}`}>Expenses</Link>
+                <Link to="/profile"         className={`mobile-link ${isActive("/profile") ? "active" : ""}`}>My Profile</Link>
+                {user?.isAdmin && <Link to="/admin" className="mobile-link mobile-link-admin">Admin Dashboard</Link>}
+                <button className="mobile-logout" onClick={handleLogout}><LogOut size={15} /> Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login"  className="mobile-link">Login</Link>
+                <Link to="/signup" className="mobile-link">Sign Up</Link>
+              </>
             )}
-            <button className="mobile-logout" onClick={handleLogout}>
-              <LogOut size={15} /> Logout
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

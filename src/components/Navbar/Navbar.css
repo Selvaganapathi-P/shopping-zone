@@ -263,6 +263,36 @@
 }
 .mobile-logout:hover { background: rgba(239,68,68,0.1); }
 
+/* Guest auth buttons */
+.navbar-auth-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-login-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: color 0.15s, background 0.15s;
+  font-family: "Inter", sans-serif;
+}
+.nav-login-btn:hover { color: #f8fafc; background: rgba(255,255,255,0.05); }
+.nav-signup-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  background: #ea580c;
+  transition: background 0.2s, transform 0.1s;
+  font-family: "Inter", sans-serif;
+}
+.nav-signup-btn:hover { background: #c2410c; transform: translateY(-1px); }
+
 @media (max-width: 768px) {
   .navbar-links { display: none; }
   .expense-btn span { display: none; }

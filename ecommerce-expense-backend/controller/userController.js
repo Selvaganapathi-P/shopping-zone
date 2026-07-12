@@ -72,18 +72,14 @@ const login = async (req, res) => {
 
 // Admin Login
 const adminLogin = async (req, res) => {
-  const { email, password, secretKey } = req.body;
+  const { email, password } = req.body;
   try {
-    if (!email || !password || !secretKey) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
     if (email !== process.env.ADMIN_EMAIL) {
       return res.status(403).json({ message: "Not authorized as admin" });
-    }
-
-    if (secretKey !== process.env.ADMIN_SECRET_KEY) {
-      return res.status(403).json({ message: "Invalid secret key" });
     }
 
     const user = await User.findOne({ email });
