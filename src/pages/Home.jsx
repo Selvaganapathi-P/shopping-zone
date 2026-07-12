@@ -8,85 +8,312 @@ import { useCart } from "../context/CartContext";
 import toast from "react-hot-toast";
 import "./Home.css";
 
-/* ── Data ────────────────────────────────────────────────────────────────── */
+// ── File-level constants ───────────────────────────────────────────────────
+
+const MARQUEE_ITEMS = [
+  "Shop Smart", "Track Every Rupee", "50,000+ Customers",
+  "Free Delivery", "Easy Returns", "Premium Quality",
+  "New Arrivals Daily", "Zero Hidden Charges",
+];
+
+const LIVE_EVENTS = [
+  { name: "Rahul M.", city: "Mumbai",    product: "iPhone 15 Pro",       emoji: "📱" },
+  { name: "Priya S.", city: "Delhi",     product: "Nike Air Max",         emoji: "👟" },
+  { name: "Arjun K.", city: "Bangalore", product: "Sony WH-1000XM5",     emoji: "🎧" },
+  { name: "Sneha R.", city: "Chennai",   product: "MacBook Air M2",       emoji: "💻" },
+  { name: "Vivek T.", city: "Hyderabad", product: "Levi's 501 Jeans",    emoji: "👖" },
+  { name: "Neha P.",  city: "Pune",      product: "Canon EOS R50",        emoji: "📸" },
+  { name: "Karan L.", city: "Kolkata",   product: "boAt Airdopes 141",   emoji: "🎵" },
+  { name: "Divya A.", city: "Ahmedabad", product: "Philips Air Fryer",   emoji: "🍳" },
+];
+
+const FEATURES = [
+  {
+    id: "catalog",
+    tag: "Massive Selection",
+    big: "10K+",
+    title: "Products Curated Daily",
+    desc: "From electronics to fashion — a living catalogue updated every day, across every category you care about.",
+    bg: "dark",
+  },
+  {
+    id: "track",
+    tag: "Smart Finance",
+    big: "₹0",
+    title: "Hidden Charges. Zero.",
+    desc: "Auto-categorised expense insights from every order. See exactly where your money goes, beautifully.",
+    bg: "light",
+  },
+  {
+    id: "delivery",
+    tag: "Fast & Free",
+    big: "499",
+    title: "Free From ₹499",
+    desc: "Express shipping across India. Order by 6 PM and get it the next morning — no excuses, no delays.",
+    bg: "accent",
+  },
+];
+
 const CATS = [
-  { name: "Electronics",    emoji: "💻", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   label: "2,400+ items" },
-  { name: "Fashion",        emoji: "👗", color: "#EC4899", bg: "rgba(236,72,153,0.08)",   label: "5,100+ items" },
-  { name: "Sports",         emoji: "⚽", color: "#F59E0B", bg: "rgba(245,158,11,0.08)",   label: "1,800+ items" },
-  { name: "Books",          emoji: "📚", color: "#8B5CF6", bg: "rgba(139,92,246,0.08)",   label: "9,000+ items" },
-  { name: "Home & Kitchen", emoji: "🏠", color: "#10B981", bg: "rgba(16,185,129,0.08)",   label: "3,200+ items" },
-  { name: "Beauty",         emoji: "💄", color: "#EF4444", bg: "rgba(239,68,68,0.08)",    label: "2,700+ items" },
-];
-
-const MARQUEE_WORDS = [
-  "Shop Smart", "Track Smarter", "50,000+ Customers", "Free Delivery",
-  "Secure Payments", "Easy Returns", "New Arrivals Daily", "Best Prices",
-];
-
-const LIVE = [
-  { name: "Arjun M.",   city: "Bengaluru",  product: "Samsung 65″ 4K TV",  price: "₹82,999",   initials: "AM", color: "#3B82F6" },
-  { name: "Priya S.",   city: "Chennai",    product: "Nike Air Max 270",    price: "₹9,495",    initials: "PS", color: "#EC4899" },
-  { name: "Kiran R.",   city: "Mumbai",     product: "iPhone 15 Pro 256GB", price: "₹1,34,900", initials: "KR", color: "#8B5CF6" },
-  { name: "Divya T.",   city: "Hyderabad",  product: "Dyson V15 Vacuum",    price: "₹54,900",   initials: "DT", color: "#10B981" },
-  { name: "Rahul B.",   city: "Pune",       product: "Levi's 501 Jeans",    price: "₹3,999",    initials: "RB", color: "#F59E0B" },
-  { name: "Sneha K.",   city: "Delhi",      product: "MacBook Air M2",      price: "₹1,14,900", initials: "SK", color: "#6366F1" },
-  { name: "Vijay P.",   city: "Coimbatore", product: "Sony WH-1000XM5",     price: "₹31,490",   initials: "VP", color: "#EF4444" },
-  { name: "Meera L.",   city: "Kochi",      product: "Banarasi Silk Saree", price: "₹4,299",    initials: "ML", color: "#F97316" },
+  { name: "Electronics",   emoji: "📱", sub: "Phones, Laptops, Cameras" },
+  { name: "Fashion",       emoji: "👗", sub: "Men, Women, Kids" },
+  { name: "Sports",        emoji: "⚽", sub: "Gear, Clothing, Equipment" },
+  { name: "Books",         emoji: "📚", sub: "Fiction, Learning, Kids" },
+  { name: "Home & Living", emoji: "🏠", sub: "Decor, Kitchen, Garden" },
+  { name: "Beauty",        emoji: "💄", sub: "Skin, Hair, Fragrance" },
 ];
 
 const STATS = [
-  { target: 10000, suffix: "+",  prefix: "",  label: "Products"  },
-  { target: 50000, suffix: "+",  prefix: "",  label: "Customers" },
-  { target: 4.9,   suffix: "★",  prefix: "",  label: "Rating"    },
-  { target: 499,   suffix: "",   prefix: "₹", label: "Free from" },
+  { target: 10000, suffix: "+",  prefix: "",  label: "Products",     dec: 0 },
+  { target: 50,    suffix: "K+", prefix: "",  label: "Customers",    dec: 0 },
+  { target: 99,    suffix: "%",  prefix: "",  label: "Satisfaction", dec: 0 },
+  { target: 4.9,   suffix: "★",  prefix: "",  label: "App Rating",   dec: 1 },
 ];
 
-/* ── Animation variants (file-level — stable references) ─────────────────── */
 const fadeUp = {
-  hidden:  { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.58, ease: [0.22, 1, 0.36, 1] } },
+  hidden:  { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } },
 };
 const slideL = {
   hidden:  { opacity: 0, x: -52 },
-  visible: { opacity: 1, x: 0,  transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.66, ease: [0.22, 1, 0.36, 1] } },
 };
 const slideR = {
   hidden:  { opacity: 0, x: 52 },
-  visible: { opacity: 1, x: 0,  transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.66, ease: [0.22, 1, 0.36, 1] } },
 };
 
-/* ── CountUp hook ────────────────────────────────────────────────────────── */
-function useCountUp(target, duration = 1700) {
-  const [count,   setCount]   = useState(0);
-  const elRef    = useRef(null);
-  const started  = useRef(false);
-  const isFloat  = target % 1 !== 0;
+// ── Custom glow cursor ─────────────────────────────────────────────────────
+
+function GlowCursor() {
+  const dotRef  = useRef(null);
+  const glowRef = useRef(null);
+  const pos     = useRef({ x: -400, y: -400 });
+  const lerp    = useRef({ x: -400, y: -400 });
+  const rafRef  = useRef(null);
 
   useEffect(() => {
-    const el = elRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
-        started.current = true;
-        const t0 = performance.now();
-        const tick = (now) => {
-          const p = Math.min((now - t0) / duration, 1);
-          const e = 1 - Math.pow(1 - p, 3);
-          setCount(isFloat ? +(e * target).toFixed(1) : Math.floor(e * target));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      }
-    }, { threshold: 0.5 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [target, duration, isFloat]);
+    const onMove = (e) => { pos.current = { x: e.clientX, y: e.clientY }; };
+    const tick = () => {
+      lerp.current.x += (pos.current.x - lerp.current.x) * 0.07;
+      lerp.current.y += (pos.current.y - lerp.current.y) * 0.07;
+      if (dotRef.current)
+        dotRef.current.style.transform =
+          `translate(${pos.current.x - 4}px,${pos.current.y - 4}px)`;
+      if (glowRef.current)
+        glowRef.current.style.transform =
+          `translate(${lerp.current.x - 230}px,${lerp.current.y - 230}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
-  return { count, elRef };
+  return (
+    <>
+      <div ref={dotRef}  className="c-dot"  aria-hidden="true" />
+      <div ref={glowRef} className="c-glow" aria-hidden="true" />
+    </>
+  );
 }
 
-/* ── Carousel hook ───────────────────────────────────────────────────────── */
-function useCarousel(itemCount) {
+// ── Floating showcase card ─────────────────────────────────────────────────
+
+function ShowcaseCard({ product, cls, factor, mx, my, floatDur, floatAmp, featured, onNav }) {
+  const px = mx * 34 * factor;
+  const py = my * 24 * factor;
+  const fallback = `https://placehold.co/300x240/1A1A2E/6666AA?text=${
+    encodeURIComponent(product?.name?.split(" ")[0] || "Item")
+  }`;
+
+  return (
+    <div className={`sc-wrap ${cls}`}>
+      <motion.div
+        className="sc-float"
+        animate={{ y: [0, floatAmp, 0] }}
+        transition={{ repeat: Infinity, duration: floatDur, ease: "easeInOut" }}
+      >
+        <motion.div
+          className={`sc-card${featured ? " sc-featured" : ""}`}
+          animate={{ x: px, y: py }}
+          transition={{ type: "spring", stiffness: 90, damping: 18 }}
+          onClick={() => product?._id && onNav(`/products/${product._id}`)}
+          style={{ cursor: product?._id ? "pointer" : "default" }}
+        >
+          <div className="sc-img-wrap">
+            {product ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                onError={(e) => { e.target.onerror = null; e.target.src = fallback; }}
+              />
+            ) : (
+              <div className="sc-shimmer" />
+            )}
+          </div>
+          {featured && product && (
+            <div className="sc-info">
+              <p className="sc-cat">{product.category}</p>
+              <p className="sc-name">{product.name}</p>
+              <span className="sc-price">₹{product.price?.toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {!featured && product && (
+            <p className="sc-mini">{product.name}</p>
+          )}
+          {!product && (
+            <div className="sc-info">
+              <div className="sc-shimmer" style={{ height: 10, width: "70%", borderRadius: 4, marginTop: 10 }} />
+              <div className="sc-shimmer" style={{ height: 10, width: "45%", borderRadius: 4 }} />
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Live activity toast ────────────────────────────────────────────────────
+
+function LiveActivity() {
+  const [current, setCurrent] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const idx = useRef(0);
+
+  useEffect(() => {
+    const show = () => {
+      idx.current = (idx.current + 1) % LIVE_EVENTS.length;
+      setCurrent(LIVE_EVENTS[idx.current]);
+      setVisible(true);
+      setTimeout(() => setVisible(false), 3200);
+    };
+    const t  = setTimeout(show, 2600);
+    const iv = setInterval(show, 5500);
+    return () => { clearTimeout(t); clearInterval(iv); };
+  }, []);
+
+  return (
+    <div className="live-wrap" aria-live="polite">
+      <AnimatePresence>
+        {visible && current && (
+          <motion.div
+            key={current.product}
+            className="live-toast"
+            initial={{ opacity: 0, y: 26, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -14, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 360, damping: 28 }}
+          >
+            <span className="live-emoji">{current.emoji}</span>
+            <div className="live-text">
+              <strong>{current.name}</strong> from {current.city}
+              <p>just bought {current.product}</p>
+            </div>
+            <span className="live-pulse" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Marquee strip ──────────────────────────────────────────────────────────
+
+function Marquee() {
+  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
+  return (
+    <div className="mq-outer" aria-hidden="true">
+      <div className="mq-track">
+        {items.map((item, i) => (
+          <span key={i} className="mq-item">
+            {item} <span className="mq-sep">✦</span>{" "}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Magnetic button ────────────────────────────────────────────────────────
+
+function MagneticBtn({ children, className, onClick }) {
+  const ref = useRef(null);
+  const [xy, setXY] = useState({ x: 0, y: 0 });
+
+  const onMove = (e) => {
+    const r = ref.current.getBoundingClientRect();
+    setXY({
+      x: (e.clientX - r.left - r.width  / 2) * 0.22,
+      y: (e.clientY - r.top  - r.height / 2) * 0.22,
+    });
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      className={className}
+      animate={{ x: xy.x, y: xy.y }}
+      transition={{ type: "spring", stiffness: 340, damping: 22 }}
+      onMouseMove={onMove}
+      onMouseLeave={() => setXY({ x: 0, y: 0 })}
+      onClick={onClick}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+// ── Count-up hook ──────────────────────────────────────────────────────────
+
+function useCountUp(target, dur, dec) {
+  const [val, setVal] = useState(0);
+  const wrapRef = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || started.current) return;
+        started.current = true;
+        const t0 = performance.now();
+        const step = (now) => {
+          const p    = Math.min((now - t0) / dur, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          setVal(+(target * ease).toFixed(dec));
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      },
+      { threshold: 0.5 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, dur, dec]);
+
+  return [val, wrapRef];
+}
+
+function StatCard({ target, suffix, prefix, label, dec }) {
+  const [val, ref] = useCountUp(target, 1800, dec);
+  return (
+    <div ref={ref} className="stat-card">
+      <div className="stat-num">
+        {prefix}{dec ? val.toFixed(dec) : Math.round(val).toLocaleString("en-IN")}{suffix}
+      </div>
+      <div className="stat-label">{label}</div>
+    </div>
+  );
+}
+
+// ── Carousel hook ──────────────────────────────────────────────────────────
+
+function useCarousel() {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd,   setAtEnd]   = useState(false);
@@ -101,270 +328,277 @@ function useCarousel(itemCount) {
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    check();
     el.addEventListener("scroll", check, { passive: true });
+    check();
     return () => el.removeEventListener("scroll", check);
-  }, [check, itemCount]);
+  }, [check]);
 
-  const left  = () => trackRef.current?.scrollBy({ left: -316, behavior: "smooth" });
-  const right = () => trackRef.current?.scrollBy({ left:  316, behavior: "smooth" });
-
-  return { trackRef, atStart, atEnd, left, right };
-}
-
-/* ── MagneticBtn ─────────────────────────────────────────────────────────── */
-function MagneticBtn({ children, className, onClick }) {
-  const ref = useRef(null);
-  const [xy, setXY] = useState({ x: 0, y: 0 });
-
-  const onMove = (e) => {
-    if (!ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    setXY({ x: (e.clientX - r.left - r.width / 2) * 0.20, y: (e.clientY - r.top - r.height / 2) * 0.20 });
+  const scroll = (dir) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 320, behavior: "smooth" });
   };
 
-  return (
-    <motion.button
-      ref={ref}
-      className={className}
-      onClick={onClick}
-      onMouseMove={onMove}
-      onMouseLeave={() => setXY({ x: 0, y: 0 })}
-      animate={{ x: xy.x, y: xy.y }}
-      transition={{ type: "spring", stiffness: 360, damping: 22 }}
-    >
-      {children}
-    </motion.button>
-  );
+  return { trackRef, atStart, atEnd, scroll };
 }
 
-/* ── Marquee ─────────────────────────────────────────────────────────────── */
-function Marquee() {
-  const all = [...MARQUEE_WORDS, ...MARQUEE_WORDS];
-  return (
-    <div className="marquee-outer" aria-hidden>
-      <div className="marquee-track">
-        {all.map((w, i) => (
-          <span key={i} className="marquee-item">{w}<span className="marquee-sep"> · </span></span>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ── Home ───────────────────────────────────────────────────────────────────
 
-/* ── LiveActivity ────────────────────────────────────────────────────────── */
-function LiveActivity() {
-  const [idx, setIdx]         = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => { setIdx(i => (i + 1) % LIVE.length); setVisible(true); }, 420);
-    }, 4400);
-    return () => clearInterval(t);
-  }, []);
-
-  const item = LIVE[idx];
-  return (
-    <div className="live-wrap">
-      <AnimatePresence mode="wait">
-        {visible && (
-          <motion.div
-            key={idx}
-            className="live-toast"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0,  opacity: 1 }}
-            exit={{    y: -16, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 340, damping: 28 }}
-          >
-            <span className="live-dot" />
-            <div className="live-avatar" style={{ background: item.color }}>{item.initials}</div>
-            <div className="live-body">
-              <p className="live-who"><strong>{item.name}</strong> · {item.city}</p>
-              <p className="live-what">Bought {item.product}</p>
-            </div>
-            <span className="live-price">{item.price}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ── StatCard ────────────────────────────────────────────────────────────── */
-function StatCard({ target, suffix, prefix, label }) {
-  const { count, elRef } = useCountUp(target);
-  return (
-    <div className="stat-card" ref={elRef}>
-      <p className="stat-num">{prefix}{count.toLocaleString()}{suffix}</p>
-      <p className="stat-lbl">{label}</p>
-    </div>
-  );
-}
-
-/* ── Home ────────────────────────────────────────────────────────────────── */
 export default function Home() {
-  const navigate = useNavigate();
-  const heroRef  = useRef(null);
+  const navigate  = useNavigate();
+  const heroRef   = useRef(null);
+
   const [products, setProducts] = useState([]);
   const [addedId,  setAddedId]  = useState(null);
-  const { addToCart }            = useCart();
-  const carousel                 = useCarousel(products.length);
+  const [heroMx,   setHeroMx]   = useState(0);
+  const [heroMy,   setHeroMy]   = useState(0);
+
+  const { addToCart } = useCart();
+  const carousel      = useCarousel();
 
   const { scrollYProgress: pageY } = useScroll();
-  const { scrollYProgress: heroY } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroOpacity = useTransform(heroY, [0, 0.72], [1, 0]);
-  const heroSlide   = useTransform(heroY, [0, 1],    ["0%", "15%"]);
+  const { scrollYProgress: heroP } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroFade  = useTransform(heroP, [0, 0.72], [1, 0]);
+  const heroShift = useTransform(heroP, [0, 1], ["0%", "14%"]);
 
   useEffect(() => {
-    API.get("/products").then(({ data }) => {
-      setProducts(Array.isArray(data) ? data.slice(0, 18) : []);
-    }).catch(() => {});
+    API.get("/products")
+      .then(({ data }) => setProducts(Array.isArray(data) ? data.slice(0, 18) : []))
+      .catch(() => {});
   }, []);
 
   const handleAdd = (e, p) => {
     e.stopPropagation();
     addToCart(p);
     setAddedId(p._id);
-    toast.success(`${p.name} added!`);
+    toast.success(`${p.name} added to cart!`);
     setTimeout(() => setAddedId(null), 2000);
   };
 
+  const onHeroMove = (e) => {
+    if (!heroRef.current) return;
+    const r = heroRef.current.getBoundingClientRect();
+    setHeroMx((e.clientX - r.left - r.width  / 2) / r.width);
+    setHeroMy((e.clientY - r.top  - r.height / 2) / r.height);
+  };
+
+  const heroProds = products.length >= 3
+    ? [products[0], products[1], products[2]]
+    : [null, null, null];
+
   return (
     <div className="home-page">
+      <GlowCursor />
       <Navbar transparent />
 
-      {/* Page-wide scroll progress bar */}
-      <motion.div className="scroll-progress-bar" style={{ scaleX: pageY }} />
+      {/* ── Scroll progress bar ── */}
+      <motion.div className="scroll-bar" style={{ scaleX: pageY }} />
 
-      {/* ══════════════════════ HERO ══════════════════════════════ */}
-      <section className="hero-section" ref={heroRef}>
-        {/* Animated aurora blobs */}
-        <div className="hero-bg" aria-hidden>
-          <div className="h-blob b1" /><div className="h-blob b2" /><div className="h-blob b3" />
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section
+        className="hero-section"
+        ref={heroRef}
+        onMouseMove={onHeroMove}
+        onMouseLeave={() => { setHeroMx(0); setHeroMy(0); }}
+      >
+        {/* Aurora + grain background */}
+        <div className="hero-bg" aria-hidden="true">
+          <div className="blob b1" />
+          <div className="blob b2" />
+          <div className="blob b3" />
           <div className="h-grain" />
+          <div className="hero-grid-lines" />
         </div>
 
-        {/* Content fades + slides up as you scroll away */}
-        <motion.div className="hero-inner" style={{ opacity: heroOpacity, y: heroSlide }}>
+        <motion.div
+          className="hero-inner"
+          style={{ opacity: heroFade, y: heroShift }}
+        >
+          {/* Left: Editorial text */}
+          <div className="hero-left">
+            <motion.div
+              className="hero-badge"
+              initial={{ opacity: 0, y: -14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08, duration: 0.48 }}
+            >
+              <Zap size={11} /> Live shopping · Free delivery
+            </motion.div>
 
-          {/* Eyebrow badge */}
+            <h1 className="hero-h1">
+              {["Discover", "Premium", "Products."].map((word, i) => (
+                <span key={i} className="h1-line">
+                  <motion.span
+                    className={`h1-word${i === 1 ? " h1-accent" : ""}`}
+                    initial={{ y: "108%", opacity: 0 }}
+                    animate={{ y: "0%", opacity: 1 }}
+                    transition={{
+                      delay: 0.18 + i * 0.15,
+                      duration: 0.86,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    {word}
+                  </motion.span>
+                </span>
+              ))}
+            </h1>
+
+            <motion.p
+              className="hero-sub"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.72, duration: 0.56 }}
+            >
+              Thousands of products. Every rupee tracked — automatically.
+              <br />Shop smarter, spend less.
+            </motion.p>
+
+            <motion.div
+              className="hero-ctas"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.88, duration: 0.5 }}
+            >
+              <MagneticBtn className="btn-primary" onClick={() => navigate("/products")}>
+                Shop Now <ArrowRight size={15} />
+              </MagneticBtn>
+              <MagneticBtn className="btn-ghost" onClick={() => navigate("/products")}>
+                Explore All
+              </MagneticBtn>
+            </motion.div>
+
+            <motion.div
+              className="hero-trust"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.06, duration: 0.6 }}
+            >
+              {[["10K+","Products"],["50K+","Customers"],["4.9★","Rating"]].map(([n,l]) => (
+                <div key={l} className="trust-item">
+                  <strong>{n}</strong>
+                  <span>{l}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Right: Floating product showcase */}
           <motion.div
-            className="hero-badge"
-            initial={{ opacity: 0, y: -14, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0,   scale: 1 }}
-            transition={{ delay: 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="hero-right"
+            initial={{ opacity: 0, x: 44 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.28, duration: 0.86, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Zap size={12} /><span>New arrivals every day</span>
-          </motion.div>
+            <div className="showcase">
+              <div className="showcase-glow" aria-hidden="true" />
 
-          {/* Headline — each word slides up from a clipped container */}
-          <h1 className="hero-heading">
-            {["India's", "Premium", "Shopping"].map((word, i) => (
-              <span key={i} className="h-line">
-                <motion.span
-                  className={`h-word${i === 1 ? " h-word-accent" : ""}`}
-                  initial={{ y: "110%", opacity: 0 }}
-                  animate={{ y: "0%",   opacity: 1 }}
-                  transition={{ delay: 0.22 + i * 0.13, duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {word}
-                </motion.span>
-              </span>
-            ))}
-          </h1>
+              <ShowcaseCard
+                product={heroProds[0]}
+                cls="sc-0"
+                factor={1.3}
+                mx={heroMx}
+                my={heroMy}
+                floatDur={4.8}
+                floatAmp={-14}
+                featured={false}
+                onNav={navigate}
+              />
+              <ShowcaseCard
+                product={heroProds[1]}
+                cls="sc-1"
+                factor={0.65}
+                mx={heroMx}
+                my={heroMy}
+                floatDur={5.6}
+                floatAmp={12}
+                featured={true}
+                onNav={navigate}
+              />
+              <ShowcaseCard
+                product={heroProds[2]}
+                cls="sc-2"
+                factor={1.5}
+                mx={heroMx}
+                my={heroMy}
+                floatDur={4.2}
+                floatAmp={-9}
+                featured={false}
+                onNav={navigate}
+              />
 
-          {/* Sub */}
-          <motion.p
-            className="hero-sub"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.72, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          >
-            Thousands of products. Every rupee tracked — automatically.
-          </motion.p>
-
-          {/* CTA row */}
-          <motion.div
-            className="hero-ctas"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.86, duration: 0.5 }}
-          >
-            <MagneticBtn className="btn-primary-hero" onClick={() => navigate("/products")}>
-              Shop Now <ArrowRight size={15} />
-            </MagneticBtn>
-            <MagneticBtn className="btn-ghost-hero" onClick={() => navigate("/products")}>
-              Browse All
-            </MagneticBtn>
-          </motion.div>
-
-          {/* Hero mini stats */}
-          <motion.div
-            className="hero-stats-row"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.04, duration: 0.6 }}
-          >
-            {[["10K+","Products"],["50K+","Customers"],["4.9★","Rating"]].map(([n, l]) => (
-              <div key={l} className="h-stat">
-                <strong>{n}</strong><span>{l}</span>
-              </div>
-            ))}
+              <motion.div
+                className="price-tag pt-a"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ repeat: Infinity, duration: 3.4, ease: "easeInOut" }}
+              >
+                🛒 Just added
+              </motion.div>
+              <motion.div
+                className="price-tag pt-b"
+                animate={{ y: [0, 7, 0] }}
+                transition={{ repeat: Infinity, duration: 4.1, ease: "easeInOut", delay: 1 }}
+              >
+                ⚡ Flash deal
+              </motion.div>
+            </div>
           </motion.div>
         </motion.div>
 
         <LiveActivity />
 
-        {/* Mouse-scroll indicator */}
         <motion.div
-          className="scroll-mouse"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+          className="scroll-pill"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
         >
-          <div className="mouse-body"><div className="mouse-dot" /></div>
+          <div className="pill-body">
+            <div className="pill-dot" />
+          </div>
         </motion.div>
       </section>
 
-      {/* ══════════════════════ MARQUEE ══════════════════════════ */}
+      {/* ═══════════════ MARQUEE ═══════════════ */}
       <Marquee />
 
-      {/* ══════════════════════ BENTO CATEGORIES ════════════════ */}
-      <motion.section
-        className="cats-section"
-        variants={slideL}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-70px" }}
-      >
-        <div className="section-intro">
-          <p className="eyebrow">Explore</p>
-          <h2 className="sec-h2">Shop by Category</h2>
+      {/* ═══════════════ FEATURES ═══════════════ */}
+      <section className="features-section">
+        <div className="features-inner">
+          <motion.div
+            className="section-label"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            Why Thansel Zovia
+          </motion.div>
+          <div className="features-grid">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.id}
+                className={`fc fc-${f.bg}`}
+                initial={{ opacity: 0, y: 48 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.13, duration: 0.64, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -8 }}
+              >
+                <span className="fc-tag">{f.tag}</span>
+                <div className="fc-big">{f.big}</div>
+                <h3 className="fc-title">{f.title}</h3>
+                <p className="fc-desc">{f.desc}</p>
+                <div className="fc-arrow">↗</div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-        <div className="bento-grid">
-          {CATS.map((cat, i) => (
-            <motion.button
-              key={cat.name}
-              className={`bento-card bc-${i}`}
-              style={{ "--cc": cat.color, "--cbg": cat.bg }}
-              onClick={() => navigate(`/products?category=${encodeURIComponent(cat.name)}`)}
-              whileHover={{ scale: 1.028 }}
-              whileTap={{ scale: 0.972 }}
-              transition={{ type: "spring", stiffness: 280, damping: 20 }}
-            >
-              <span className="bc-emoji">{cat.emoji}</span>
-              <div className="bc-text">
-                <span className="bc-name">{cat.name}</span>
-                <span className="bc-count">{cat.label}</span>
-              </div>
-              <span className="bc-arrow"><ArrowRight size={13} /></span>
-            </motion.button>
-          ))}
-        </div>
-      </motion.section>
+      </section>
 
-      {/* ══════════════════════ PRODUCTS CAROUSEL ═══════════════ */}
+      {/* ═══════════════ PRODUCTS CAROUSEL ═══════════════ */}
       {products.length > 0 && (
         <motion.section
           className="trending-section"
@@ -373,55 +607,127 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true, margin: "-70px" }}
         >
-          <div className="trending-head">
+          <div className="section-head">
             <div>
-              <p className="eyebrow">Curated picks</p>
-              <h2 className="sec-h2">Trending Right Now</h2>
+              <div className="section-label">Handpicked For You</div>
+              <h2 className="section-title">Trending Now</h2>
             </div>
-            <div className="t-nav">
-              <button className="t-arrow" onClick={carousel.left}  disabled={carousel.atStart} aria-label="prev"><ChevronLeft  size={18}/></button>
-              <button className="t-arrow" onClick={carousel.right} disabled={carousel.atEnd}   aria-label="next"><ChevronRight size={18}/></button>
-              <button className="view-all-link" onClick={() => navigate("/products")}>View all <ArrowRight size={13}/></button>
+            <div className="carousel-arrows">
+              <button
+                className="arrow-btn"
+                onClick={() => carousel.scroll(-1)}
+                disabled={carousel.atStart}
+                aria-label="Scroll left"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                className="arrow-btn"
+                onClick={() => carousel.scroll(1)}
+                disabled={carousel.atEnd}
+                aria-label="Scroll right"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
           </div>
 
-          <div className="t-track" ref={carousel.trackRef}>
-            {products.map((p) => (
-              <motion.div
-                key={p._id}
-                className="t-card"
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => navigate(`/products/${p._id}`)}
-              >
-                <div className="t-img">
-                  <img
-                    src={p.image || "https://placehold.co/280x210/EEEEEE/AAAAAA?text=No+Image"}
-                    alt={p.name}
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/280x210/EEEEEE/AAAAAA?text=No+Image"; }}
-                  />
-                </div>
-                <div className="t-info">
-                  <p className="t-cat">{p.category}</p>
-                  <p className="t-name">{p.name}</p>
-                  <div className="t-row">
-                    <span className="t-price">₹{p.price?.toLocaleString()}</span>
+          <div className="carousel-track" ref={carousel.trackRef}>
+            <AnimatePresence>
+              {products.map((p, i) => (
+                <motion.div
+                  key={p._id}
+                  className="prod-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: Math.min(i * 0.04, 0.8),
+                    duration: 0.4,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  whileHover={{ y: -6 }}
+                  onClick={() => navigate(`/products/${p._id}`)}
+                >
+                  <div className="prod-img-wrap">
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://placehold.co/300x220/F4F4F8/9898B0?text=${
+                          encodeURIComponent(p.name?.split(" ")[0] || "Item")
+                        }`;
+                      }}
+                    />
                     <button
-                      className={`t-add${addedId === p._id ? " added" : ""}`}
+                      className={`cart-quick${addedId === p._id ? " added" : ""}`}
                       onClick={(e) => handleAdd(e, p)}
                       aria-label="Add to cart"
                     >
-                      {addedId === p._id ? "✓" : <ShoppingCart size={13}/>}
+                      {addedId === p._id
+                        ? <span className="cart-check">✓</span>
+                        : <ShoppingCart size={15} />}
                     </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="prod-info">
+                    <p className="prod-cat">{p.category}</p>
+                    <p className="prod-name">{p.name}</p>
+                    <div className="prod-price-row">
+                      <span className="prod-price">₹{p.price?.toLocaleString("en-IN")}</span>
+                      {p.mrp && p.mrp > p.price && (
+                        <span className="prod-mrp">₹{p.mrp?.toLocaleString("en-IN")}</span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </motion.section>
       )}
 
-      {/* ══════════════════════ STATS ════════════════════════════ */}
+      {/* ═══════════════ CATEGORIES BENTO ═══════════════ */}
+      <motion.section
+        className="cats-section"
+        variants={slideL}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-70px" }}
+      >
+        <div className="section-head">
+          <div>
+            <div className="section-label">Browse By Category</div>
+            <h2 className="section-title">Shop Every World</h2>
+          </div>
+          <button className="view-all-btn" onClick={() => navigate("/products")}>
+            View all <ArrowRight size={14} />
+          </button>
+        </div>
+
+        <div className="bento-grid">
+          {CATS.map((c, i) => (
+            <motion.div
+              key={c.name}
+              className={`bc bc-${i}`}
+              whileHover={{ scale: 1.025 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              onClick={() => navigate(`/products?category=${encodeURIComponent(c.name)}`)}
+            >
+              <motion.span
+                className="bc-emoji"
+                whileHover={{ scale: 1.3, rotate: 12 }}
+                transition={{ type: "spring", stiffness: 300, damping: 14 }}
+              >
+                {c.emoji}
+              </motion.span>
+              <p className="bc-name">{c.name}</p>
+              <p className="bc-sub">{c.sub}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ═══════════════ STATS ═══════════════ */}
       <motion.section
         className="stats-section"
         variants={fadeUp}
@@ -429,12 +735,20 @@ export default function Home() {
         whileInView="visible"
         viewport={{ once: true, margin: "-60px" }}
       >
-        <div className="stats-grid">
-          {STATS.map((s) => <StatCard key={s.label} {...s} />)}
+        <div className="stats-inner">
+          <div className="stats-copy">
+            <div className="section-label light">By the numbers</div>
+            <h2 className="stats-title">The Thansel Zovia<br />Effect</h2>
+          </div>
+          <div className="stats-grid">
+            {STATS.map((s) => (
+              <StatCard key={s.label} {...s} />
+            ))}
+          </div>
         </div>
       </motion.section>
 
-      {/* ══════════════════════ CTA ══════════════════════════════ */}
+      {/* ═══════════════ CTA ═══════════════ */}
       <motion.section
         className="cta-section"
         variants={fadeUp}
@@ -442,23 +756,68 @@ export default function Home() {
         whileInView="visible"
         viewport={{ once: true, margin: "-60px" }}
       >
-        <div className="cta-glow cta-glow-l" aria-hidden />
-        <div className="cta-glow cta-glow-r" aria-hidden />
+        <div className="cta-grain" aria-hidden="true" />
+        <div className="cta-glow cta-g1" aria-hidden="true" />
+        <div className="cta-glow cta-g2" aria-hidden="true" />
         <div className="cta-inner">
-          <p className="eyebrow" style={{ color: "rgba(255,180,150,0.8)" }}>Get started today</p>
-          <h2 className="cta-h2">Ready to shop smarter?</h2>
-          <p className="cta-sub">Join 50,000+ happy customers discovering the best deals every day.</p>
-          <MagneticBtn className="btn-cta-white" onClick={() => navigate("/products")}>
-            Explore Products <ArrowRight size={16}/>
-          </MagneticBtn>
+          <h2 className="cta-title">Start Shopping<br />Smarter Today.</h2>
+          <p className="cta-sub">
+            Join 50,000+ Indians who track every rupee and love every purchase.
+          </p>
+          <div className="cta-btns">
+            <MagneticBtn className="cta-btn-main" onClick={() => navigate("/signup")}>
+              Create Free Account <ArrowRight size={15} />
+            </MagneticBtn>
+            <MagneticBtn className="cta-btn-ghost" onClick={() => navigate("/products")}>
+              Browse Products
+            </MagneticBtn>
+          </div>
         </div>
       </motion.section>
 
-      {/* ══════════════════════ FOOTER ═══════════════════════════ */}
+      {/* ═══════════════ FOOTER ═══════════════ */}
       <footer className="home-footer">
         <div className="footer-inner">
-          <span className="footer-brand">🛍️ Thansel Zovia</span>
-          <p>© 2026 Thansel Zovia · Built with ❤️ for India · Shop Smart. Track Smarter.</p>
+          <div className="footer-brand">
+            <div className="footer-logo">
+              <span className="footer-logo-mark">TZ</span>
+              <span>Thansel Zovia</span>
+            </div>
+            <p>India's premium shopping &amp; expense tracking platform. Shop smart, live better.</p>
+            <div className="footer-socials">
+              {["Twitter", "Instagram", "LinkedIn"].map((s) => (
+                <span key={s} className="social-chip">{s}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="footer-cols">
+            {[
+              { title: "Shop",    links: ["All Products","Electronics","Fashion","Sports","Books"] },
+              { title: "Account", links: ["Login","Sign Up","My Orders","Wishlist","Profile"] },
+              { title: "Help",    links: ["FAQ","Shipping","Returns","Contact","Privacy"] },
+            ].map((col) => (
+              <div key={col.title} className="footer-col">
+                <h4>{col.title}</h4>
+                {col.links.map((l) => (
+                  <span
+                    key={l}
+                    className="footer-link"
+                    onClick={() => navigate("/products")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && navigate("/products")}
+                  >
+                    {l}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="footer-bar">
+          <span>© 2025 Thansel Zovia. All rights reserved.</span>
+          <span>Made with ❤️ in India</span>
         </div>
       </footer>
     </div>
