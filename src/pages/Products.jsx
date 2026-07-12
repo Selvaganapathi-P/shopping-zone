@@ -402,22 +402,20 @@ export default function Products() {
               <button className="reset-btn" style={{ marginTop: 16 }} onClick={resetFilters}>Reset Filters</button>
             </motion.div>
           ) : (
-            <motion.div
-              className="products-grid"
-              initial="hidden" animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-            >
+            <div className="products-grid">
               <AnimatePresence mode="popLayout">
-                {filtered.map((product) => {
+                {filtered.map((product, i) => {
                   const wishlisted = isInWishlist(product._id);
                   return (
                     <motion.div
                       className="product-card"
                       key={product._id}
-                      variants={cardVariants}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.94 }}
+                      transition={{ duration: 0.28, delay: Math.min(i * 0.03, 0.7), ease: [0.22,1,0.36,1] }}
                       layout
                       whileHover={{ y: -4 }}
-                      transition={{ duration: 0.2 }}
                       onClick={() => navigate(`/products/${product._id}`)}
                       style={{ cursor: "pointer" }}
                     >
@@ -469,7 +467,7 @@ export default function Products() {
                   );
                 })}
               </AnimatePresence>
-            </motion.div>
+            </div>
           )}
         </main>
       </div>
