@@ -29,7 +29,7 @@ const addProduct = async (req, res) => {
       return res.status(400).json({ message: "Name, category, price, and description are required." });
     }
     const image = req.file
-      ? `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${req.file.filename}`
+      ? (req.file.path?.startsWith("http") ? req.file.path : `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${req.file.filename}`)
       : req.body.image;
     if (!image) return res.status(400).json({ message: "Product image is required." });
 
@@ -76,7 +76,9 @@ const updateProduct = async (req, res) => {
     }
 
     if (req.file) {
-      product.image = `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${req.file.filename}`;
+      product.image = req.file.path?.startsWith("http")
+        ? req.file.path
+        : `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${req.file.filename}`;
     } else if (req.body.image) {
       product.image = req.body.image;
     }
