@@ -2,6 +2,7 @@ const Order    = require("../model/orderModel");
 const Expense  = require("../model/expenseModel");
 const Coupon   = require("../model/couponModel");
 const nodemailer = require("nodemailer");
+const { sendOrderWhatsApp } = require("../services/whatsapp");
 
 function getMailer() {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
@@ -81,10 +82,13 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    // Fire-and-forget email confirmation
+    // Fire-and-forget notifications (email + WhatsApp)
     const User = require("../model/userModel");
     User.findById(req.user._id).then((u) => {
-      if (u?.email) sendOrderConfirmationEmail(order, u.email, u.name || "Customer");
+      const name = u?.name || "Customer";
+      if (u?.email) sendOrderConfirmationEmail(order, u.email, name);
+      const phone = order.deliveryAddress?.phone || u?.phone;
+      if (phone) sendOrderWhatsApp(phone, order, name).catch(() => {});
     }).catch(() => {});
 
     res.status(201).json(order);
