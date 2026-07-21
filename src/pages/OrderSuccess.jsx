@@ -96,43 +96,52 @@ export default function OrderSuccess() {
   };
 
   const handleWhatsApp = () => {
+    const DIV     = "━━━━━━━━━━━━━━━━━━━━";
     const address = order.deliveryAddress;
+    const now     = new Date();
+    const date    = now.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const time    = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+
+    const addrLine2 = address?.addressLine2 ? `, ${address.addressLine2}` : "";
+    const landmark  = address?.landmark ? `Near: ${address.landmark}\n` : "";
+
     const items = order.items
       ?.map((item, i) =>
-        `${i + 1}. ${item.name} x${item.quantity} = ₹${(item.price * item.quantity).toLocaleString()}`
+        `${i + 1}. ${item.name} x${item.quantity} = Rs.${(item.price * item.quantity).toLocaleString("en-IN")}`
       )
       .join("\n");
 
-    const message = `
-🛍️ *Thansel Zovia - Order Confirmation*
-━━━━━━━━━━━━━━━━━━━━
-📦 *Order ID:* #${order._id?.slice(0, 12).toUpperCase()}
-📅 *Date:* ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-⏰ *Time:* ${new Date().toLocaleTimeString("en-IN")}
-━━━━━━━━━━━━━━━━━━━━
-📍 *Delivery Address:*
-${address?.name}
-${address?.addressLine1}${address?.addressLine2 ? ", " + address?.addressLine2 : ""}
-${address?.city}, ${address?.state} - ${address?.pincode}
-📞 ${address?.phone}
-━━━━━━━━━━━━━━━━━━━━
-🛒 *Order Items:*
-${items}
-━━━━━━━━━━━━━━━━━━━━
-💰 *Price Summary:*
-Subtotal  : ₹${order.subtotal?.toLocaleString()}
-GST (18%) : ₹${order.tax?.toLocaleString()}
-Delivery  : ${order.delivery === 0 ? "FREE" : "₹" + order.delivery}
-━━━━━━━━━━━━━━━━━━━━
-💵 *Grand Total: ₹${order.grandTotal?.toLocaleString()}*
-━━━━━━━━━━━━━━━━━━━━
-Thank you for shopping with Thansel Zovia! 🎉
-    `.trim();
+    const gstPct  = order.subtotal > 0 ? Math.round((order.tax / order.subtotal) * 100) : 18;
+    const delivery = order.delivery === 0 ? "FREE" : `Rs.${order.delivery?.toLocaleString("en-IN")}`;
 
-    const encoded = encodeURIComponent(message);
-    const phone   = address?.phone?.replace(/\D/g, "");
-    const url     = `https://wa.me/91${phone}?text=${encoded}`;
-    window.open(url, "_blank");
+    const message = [
+      `*Thansel Zovia - Order Confirmation*`,
+      DIV,
+      `*Order ID:* #${order._id?.slice(-12).toUpperCase()}`,
+      `*Date:*     ${date}`,
+      `*Time:*     ${time}`,
+      DIV,
+      `*Delivery Address:*`,
+      address?.name,
+      `${address?.addressLine1}${addrLine2}`,
+      `${address?.city}, ${address?.state} - ${address?.pincode}`,
+      `${landmark}${address?.phone}`,
+      DIV,
+      `*Order Items:*`,
+      items,
+      DIV,
+      `*Price Summary:*`,
+      `Subtotal       : Rs.${order.subtotal?.toLocaleString("en-IN")}`,
+      `GST (${gstPct}%)      : Rs.${order.tax?.toLocaleString("en-IN")}`,
+      `Delivery       : ${delivery}`,
+      DIV,
+      `*Grand Total: Rs.${order.grandTotal?.toLocaleString("en-IN")}*`,
+      DIV,
+      `Thank you for shopping with Thansel Zovia!`,
+    ].join("\n");
+
+    const phone = address?.phone?.replace(/\D/g, "");
+    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   return (
@@ -307,7 +316,7 @@ Thank you for shopping with Thansel Zovia! 🎉
           {downloading ? "Downloading…" : "PDF Invoice"}
         </button>
         <button className="whatsapp-btn" onClick={handleWhatsApp}>
-          📲 Bill to WhatsApp
+          Resend on WhatsApp
         </button>
         <button
           className="done-btn"
