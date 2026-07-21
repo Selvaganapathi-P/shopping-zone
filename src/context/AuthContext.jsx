@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     });
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data));
+    if (data.isAdmin) localStorage.setItem("isAdminSession", "true");
     setUser(data);
   };
 

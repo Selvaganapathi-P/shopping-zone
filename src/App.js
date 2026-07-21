@@ -58,8 +58,7 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  const isAdminSession = localStorage.getItem("isAdminSession") === "true";
-  if (!isAdmin || !isAdminSession) return <Navigate to="/home" replace />;
+  if (!isAdmin) return <Navigate to="/home" replace />;
   return children;
 };
 
