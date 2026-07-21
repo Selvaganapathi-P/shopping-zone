@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Navbar from "../components/Navbar/Navbar";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Zap } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
 import API from "../api/axios";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -336,8 +336,6 @@ export default function Home() {
 
   const [products, setProducts] = useState([]);
   const [addedId,  setAddedId]  = useState(null);
-  const [heroMx,   setHeroMx]   = useState(0);
-  const [heroMy,   setHeroMy]   = useState(0);
 
   const { addToCart } = useCart();
   const { user }      = useAuth();
@@ -370,13 +368,6 @@ export default function Home() {
     setTimeout(() => setAddedId(null), 2000);
   };
 
-  const onHeroMove = (e) => {
-    if (!heroRef.current) return;
-    const r = heroRef.current.getBoundingClientRect();
-    setHeroMx((e.clientX - r.left - r.width  / 2) / r.width);
-    setHeroMy((e.clientY - r.top  - r.height / 2) / r.height);
-  };
-
   const heroProds = products.length >= 3
     ? [products[0], products[1], products[2]]
     : [null, null, null];
@@ -393,8 +384,6 @@ export default function Home() {
       <section
         className="hero-section"
         ref={heroRef}
-        onMouseMove={onHeroMove}
-        onMouseLeave={() => { setHeroMx(0); setHeroMy(0); }}
       >
         {/* Aurora + grain background */}
         <div className="hero-bg" aria-hidden="true">
