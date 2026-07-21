@@ -30,11 +30,9 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: TWILIO_ACCOUNT_SID
+      - key: GREEN_API_INSTANCE
         sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_WHATSAPP_NUMBER
+      - key: GREEN_API_TOKEN
         sync: false
       - key: SMTP_HOST
         sync: false

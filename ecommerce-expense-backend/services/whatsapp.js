@@ -1,29 +1,25 @@
-const twilio = require("twilio");
-
 const DIV = "━━━━━━━━━━━━━━━━━━━━";
 
-function toE164(phone) {
+function toChatId(phone) {
   const digits = String(phone).replace(/\D/g, "");
-  if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
-  if (digits.length === 10) return `+91${digits}`;
-  return `+${digits}`;
+  if (digits.startsWith("91") && digits.length === 12) return `${digits}@c.us`;
+  return `91${digits}@c.us`;
 }
 
 function formatDateTime(date) {
-  const d = new Date(date);
-  const day = d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const d    = new Date(date);
+  const day  = d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
   return { day, time };
 }
 
 async function sendOrderWhatsApp(phone, order, userName) {
-  const sid   = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from  = process.env.TWILIO_WHATSAPP_NUMBER;
+  const idInstance = process.env.GREEN_API_INSTANCE;
+  const apiToken   = process.env.GREEN_API_TOKEN;
 
-  if (!sid || !token || !from || !phone) return;
+  if (!idInstance || !apiToken || !phone) return;
 
-  const client  = twilio(sid, token);
+  const chatId  = toChatId(phone);
   const orderId = order._id.toString().slice(-12).toUpperCase();
   const { day, time } = formatDateTime(order.createdAt || new Date());
 
@@ -42,7 +38,7 @@ async function sendOrderWhatsApp(phone, order, userName) {
   const gstPct  = order.subtotal > 0 ? Math.round((order.tax / order.subtotal) * 100) : 18;
   const delivery = order.delivery > 0 ? `Rs.${order.delivery.toLocaleString("en-IN")}` : "FREE";
 
-  const lines = [
+  const message = [
     `*Thansel Zovia - Order Confirmation*`,
     DIV,
     `*Order ID:* #${orderId}`,
@@ -63,13 +59,17 @@ async function sendOrderWhatsApp(phone, order, userName) {
     `*Grand Total: Rs.${order.grandTotal?.toLocaleString("en-IN")}*`,
     DIV,
     `Thank you for shopping with Thansel Zovia!`,
-  ];
+  ].join("\n");
 
-  await client.messages.create({
-    from: `whatsapp:+${from.replace(/\D/g, "")}`,
-    to:   `whatsapp:${toE164(phone)}`,
-    body: lines.join("\n"),
+  const url = `https://api.green-api.com/waInstance${idInstance}/sendMessage/${apiToken}`;
+
+  const res = await fetch(url, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ chatId, message }),
   });
+
+  if (!res.ok) throw new Error(`Green API ${res.status}`);
 }
 
 module.exports = { sendOrderWhatsApp };
