@@ -116,9 +116,15 @@
   border: 1.5px solid #e8e8e8;
   border-radius: 10px;
   font-size: 14px;
+  color: #1a1a2e;
   outline: none;
   transition: all 0.2s;
   background: #fafafa;
+  font-family: inherit;
+}
+
+.modal-group input::placeholder {
+  color: #b0b0c4;
 }
 
 .modal-group input:focus {
