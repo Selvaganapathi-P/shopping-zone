@@ -82,22 +82,20 @@ const adminLogin = async (req, res) => {
       return res.status(403).json({ message: "Not authorized as admin" });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "Admin account not found" });
-    }
-
-    const isMatch = user.matchPassword(password);
-    if (!isMatch) {
+    if (password !== process.env.ADMIN_SECRET_KEY) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
+    // Try to find a real DB user for a proper token; fall back to email-based token
+    const user = await User.findOne({ email });
+    const tokenId = user ? user._id : email;
+
     res.json({
-      _id:     user._id,
-      name:    user.name,
-      email:   user.email,
+      _id:     user?._id || "admin",
+      name:    user?.name || "Admin",
+      email,
       isAdmin: true,
-      token:   generateToken(user._id),
+      token:   generateToken(tokenId),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
