@@ -346,8 +346,11 @@ export default function Home() {
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const heroFade  = useTransform(heroP, [0, 0.72], [1, 0]);
-  const heroShift = useTransform(heroP, [0, 1], ["0%", "14%"]);
+  const heroFade   = useTransform(heroP, [0, 0.72], [1, 0]);
+  const heroShift  = useTransform(heroP, [0, 1], ["0%", "14%"]);
+  // Cinematic: hero frame shrinks and gets rounded corners as user scrolls
+  const heroScale  = useTransform(heroP, [0, 1], [1, 0.84]);
+  const heroRadius = useTransform(heroP, [0, 1], [0, 28]);
 
   useEffect(() => {
     API.get("/products")
@@ -385,14 +388,20 @@ export default function Home() {
         className="hero-section"
         ref={heroRef}
       >
-        {/* Aurora + grain background */}
-        <div className="hero-bg" aria-hidden="true">
-          <div className="blob b1" />
-          <div className="blob b2" />
-          <div className="blob b3" />
-          <div className="h-grain" />
-          <div className="hero-grid-lines" />
-        </div>
+        {/* Cinematic frame: scales down + rounds corners on scroll */}
+        <motion.div
+          className="hero-frame"
+          style={{ scale: heroScale, borderRadius: heroRadius }}
+        >
+          {/* Aurora + grain background */}
+          <div className="hero-bg" aria-hidden="true">
+            <div className="blob b1" />
+            <div className="blob b2" />
+            <div className="blob b3" />
+            <div className="h-grain" />
+            <div className="hero-grid-lines" />
+          </div>
+        </motion.div>
 
         <motion.div
           className="hero-inner"

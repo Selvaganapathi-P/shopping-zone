@@ -59,6 +59,15 @@
   overflow: hidden;
 }
 
+/* Cinematic frame that scales + rounds on scroll */
+.hero-frame {
+  position: absolute;
+  inset: 0;
+  transform-origin: center top;
+  will-change: transform, border-radius;
+  overflow: hidden;
+}
+
 /* Aurora background */
 .hero-bg {
   position: absolute;

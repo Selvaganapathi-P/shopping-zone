@@ -1,12 +1,14 @@
 import "./i18n/i18n"; // init i18n before anything else
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { AdminProvider, useAdmin } from "./context/AdminContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { useEffect } from "react";
+import { useLenis } from "./hooks/useLenis";
+import ScrollToTop from "./components/UI/ScrollToTop";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminLogin from "./pages/AdminLogin";
@@ -62,9 +64,36 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Page transition wrapper — each page fades + lifts in, fades + drops out
+const pageVariants = {
+  initial: { opacity: 0, y: 14 },
+  enter:   { opacity: 1, y: 0,  transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
+  exit:    { opacity: 0, y: -10, transition: { duration: 0.22, ease: [0.36, 0, 0.66, 0] } },
+};
+
+function PageWrapper({ children }) {
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="enter"
+      exit="exit"
+      style={{ willChange: "opacity, transform" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 function AnimatedRoutes() {
   useAuth();
+  useLenis(); // init Lenis smooth scroll for entire app
   const location = useLocation();
+
+  useEffect(() => {
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleBack = () => {
@@ -113,6 +142,7 @@ function App() {
             <WishlistProvider>
               <AnimatedRoutes />
               <AIChatWidget />
+              <ScrollToTop />
               <Toaster
                 position="top-right"
                 toastOptions={{

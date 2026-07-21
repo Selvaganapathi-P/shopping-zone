@@ -422,12 +422,13 @@ export default function Products() {
                     <motion.div
                       className="product-card"
                       key={product._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.94 }}
-                      transition={{ duration: 0.28, delay: Math.min(i * 0.03, 0.7), ease: [0.22,1,0.36,1] }}
+                      initial={{ opacity: 0, y: 28, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.93, y: 10 }}
+                      transition={{ duration: 0.42, delay: Math.min(i * 0.045, 0.6), ease: [0.22,1,0.36,1] }}
                       layout
-                      whileHover={{ y: -4 }}
+                      whileHover={{ y: -8, scale: 1.02, transition: { type: "spring", stiffness: 320, damping: 22 } }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => navigate(`/products/${product._id}`)}
                       style={{ cursor: "pointer" }}
                     >

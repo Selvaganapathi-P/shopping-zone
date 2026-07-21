@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useScroll, useTransform } from "framer-motion";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -67,6 +68,13 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { user }     = useAuth();
+
+  const imgRef = useRef(null);
+  const { scrollYProgress: imgP } = useScroll({
+    target: imgRef,
+    offset: ["start end", "end start"],
+  });
+  const imgY = useTransform(imgP, [0, 1], ["-8%", "8%"]);
 
   const [product, setProduct]         = useState(null);
   const [loading, setLoading]         = useState(true);
@@ -192,21 +200,23 @@ export default function ProductDetail() {
 
           {/* Main grid */}
           <div className="pd-main">
-            {/* Image */}
+            {/* Image — parallax on scroll */}
             <motion.div
               className="pd-image-col"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
+              ref={imgRef}
+              initial={{ opacity: 0, x: -28 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.56, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="pd-image-wrap">
-                <img
+                <motion.img
                   src={imgError
                     ? `https://placehold.co/600x600/F4F4F8/9898B0?text=${encodeURIComponent(product.name.split(" ")[0])}`
                     : activeImgSrc
                   }
                   alt={product.name}
                   className="pd-image"
+                  style={{ y: imgY }}
                   onError={() => setImgError(true)}
                 />
                 {discount > 0 && <div className="pd-discount-badge">{discount}% OFF</div>}
@@ -237,9 +247,9 @@ export default function ProductDetail() {
             {/* Info */}
             <motion.div
               className="pd-info"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.56, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="pd-category-tag"><Package size={12} /> {product.category}</div>
               <h1 className="pd-name">{product.name}</h1>
