@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import API from "../api/axios";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar/Navbar";
 import toast from "react-hot-toast";
-import { Search, SlidersHorizontal, Star, ShoppingCart, Check, X, Heart, Mic, MicOff } from "lucide-react";
+import { Search, SlidersHorizontal, Star, ShoppingCart, Check, X, Heart, Mic, MicOff, Zap } from "lucide-react";
 import "./Products.css";
 
 const CATEGORIES   = ["All","Electronics","Fashion","Home & Kitchen","Sports","Books","Beauty"];
@@ -100,6 +101,7 @@ export default function Products() {
   const searchRef                                  = useRef(null);
   const { addToCart }                             = useCart();
   const { isInWishlist, toggleWishlist }          = useWishlist();
+  const { user }                                  = useAuth();
   const [searchParams]                            = useSearchParams();
 
   const [voiceLang, setVoiceLang] = useState("en-IN");
@@ -186,10 +188,26 @@ export default function Products() {
 
   const handleAddToCart = (e, product) => {
     e.stopPropagation();
+    if (!user) {
+      toast.error("Please log in to add items to cart");
+      navigate("/login");
+      return;
+    }
     addToCart(product);
     setAddedId(product._id);
     toast.success(`${product.name} added!`);
     setTimeout(() => setAddedId(null), 2000);
+  };
+
+  const handleBuyNow = (e, product) => {
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please log in to purchase");
+      navigate("/login");
+      return;
+    }
+    addToCart(product);
+    navigate("/cart");
   };
 
   const handleWishlist = (e, product) => {
@@ -449,13 +467,22 @@ export default function Products() {
                             <Star size={11} fill="#f59e0b" stroke="none" /> {product.rating}
                           </span>
                         </div>
-                        <motion.button
-                          className={`add-cart-btn ${addedId === product._id ? "added" : ""}`}
-                          onClick={(e) => handleAddToCart(e, product)}
-                          whileTap={{ scale: 0.96 }}
-                        >
-                          {addedId === product._id ? <><Check size={15} /> Added!</> : <><ShoppingCart size={15} /> Add to Cart</>}
-                        </motion.button>
+                        <div className="card-btns">
+                          <motion.button
+                            className={`add-cart-btn ${addedId === product._id ? "added" : ""}`}
+                            onClick={(e) => handleAddToCart(e, product)}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            {addedId === product._id ? <><Check size={14} /> Added!</> : <><ShoppingCart size={14} /> Cart</>}
+                          </motion.button>
+                          <motion.button
+                            className="buy-now-btn"
+                            onClick={(e) => handleBuyNow(e, product)}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            <Zap size={14} /> Buy Now
+                          </motion.button>
+                        </div>
                       </div>
                     </motion.div>
                   );

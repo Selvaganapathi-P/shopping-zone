@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar/Navbar";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Zap } from "lucide-react";
 import API from "../api/axios";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import "./Home.css";
 
@@ -121,59 +122,44 @@ function GlowCursor() {
   );
 }
 
-// ── Floating showcase card ─────────────────────────────────────────────────
+// ── Hero product grid card ─────────────────────────────────────────────────
 
-function ShowcaseCard({ product, cls, factor, mx, my, floatDur, floatAmp, featured, onNav }) {
-  const px = mx * 34 * factor;
-  const py = my * 24 * factor;
+function HeroCard({ product, floatDur, floatAmp, tall, onNav, delay = 0 }) {
   const fallback = `https://placehold.co/300x240/1A1A2E/6666AA?text=${
     encodeURIComponent(product?.name?.split(" ")[0] || "Item")
   }`;
+  const disc = product?.mrp && product.mrp > product.price
+    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    : 0;
 
   return (
-    <div className={`sc-wrap ${cls}`}>
-      <motion.div
-        className="sc-float"
-        animate={{ y: [0, floatAmp, 0] }}
-        transition={{ repeat: Infinity, duration: floatDur, ease: "easeInOut" }}
-      >
-        <motion.div
-          className={`sc-card${featured ? " sc-featured" : ""}`}
-          animate={{ x: px, y: py }}
-          transition={{ type: "spring", stiffness: 90, damping: 18 }}
-          onClick={() => product?._id && onNav(`/products/${product._id}`)}
-          style={{ cursor: product?._id ? "pointer" : "default" }}
-        >
-          <div className="sc-img-wrap">
-            {product ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                onError={(e) => { e.target.onerror = null; e.target.src = fallback; }}
-              />
-            ) : (
-              <div className="sc-shimmer" />
-            )}
+    <motion.div
+      className={`hpg-card${tall ? " hpg-tall" : ""}`}
+      animate={{ y: [0, floatAmp, 0] }}
+      transition={{ repeat: Infinity, duration: floatDur, ease: "easeInOut", delay }}
+      onClick={() => product?._id && onNav(`/products/${product._id}`)}
+      style={{ cursor: product?._id ? "pointer" : "default" }}
+    >
+      {product ? (
+        <>
+          <div className={`hpg-img${tall ? " hpg-img-tall" : ""}`}>
+            <img src={product.image} alt={product.name}
+              onError={(e) => { e.target.onerror = null; e.target.src = fallback; }} />
+            {disc > 0 && <span className="hpg-disc">{disc}% OFF</span>}
           </div>
-          {featured && product && (
-            <div className="sc-info">
-              <p className="sc-cat">{product.category}</p>
-              <p className="sc-name">{product.name}</p>
-              <span className="sc-price">₹{product.price?.toLocaleString("en-IN")}</span>
+          <div className="hpg-info">
+            <span className="hpg-cat">{product.category}</span>
+            <span className="hpg-name">{product.name}</span>
+            <div className="hpg-price-row">
+              <span className="hpg-price">₹{product.price?.toLocaleString("en-IN")}</span>
+              {disc > 0 && <span className="hpg-mrp">₹{product.mrp?.toLocaleString("en-IN")}</span>}
             </div>
-          )}
-          {!featured && product && (
-            <p className="sc-mini">{product.name}</p>
-          )}
-          {!product && (
-            <div className="sc-info">
-              <div className="sc-shimmer" style={{ height: 10, width: "70%", borderRadius: 4, marginTop: 10 }} />
-              <div className="sc-shimmer" style={{ height: 10, width: "45%", borderRadius: 4 }} />
-            </div>
-          )}
-        </motion.div>
-      </motion.div>
-    </div>
+          </div>
+        </>
+      ) : (
+        <div className="hpg-shimmer" />
+      )}
+    </motion.div>
   );
 }
 
@@ -354,6 +340,7 @@ export default function Home() {
   const [heroMy,   setHeroMy]   = useState(0);
 
   const { addToCart } = useCart();
+  const { user }      = useAuth();
   const carousel      = useCarousel();
 
   const { scrollYProgress: pageY } = useScroll();
@@ -372,6 +359,11 @@ export default function Home() {
 
   const handleAdd = (e, p) => {
     e.stopPropagation();
+    if (!user) {
+      toast.error("Please log in to add items to cart");
+      navigate("/login");
+      return;
+    }
     addToCart(p);
     setAddedId(p._id);
     toast.success(`${p.name} added to cart!`);
@@ -425,7 +417,8 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08, duration: 0.48 }}
             >
-              <Zap size={11} /> Live shopping · Free delivery
+              <span className="hero-live-dot" />
+              Live shopping · Free delivery
             </motion.div>
 
             <h1 className="hero-h1">
@@ -486,61 +479,31 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Right: Floating product showcase */}
+          {/* Right: Product card grid */}
           <motion.div
             className="hero-right"
             initial={{ opacity: 0, x: 44 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.28, duration: 0.86, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="showcase">
-              <div className="showcase-glow" aria-hidden="true" />
+            <div className="hero-product-grid">
+              <div className="hpg-glow" aria-hidden="true" />
 
-              <ShowcaseCard
-                product={heroProds[0]}
-                cls="sc-0"
-                factor={1.3}
-                mx={heroMx}
-                my={heroMy}
-                floatDur={4.8}
-                floatAmp={-14}
-                featured={false}
-                onNav={navigate}
-              />
-              <ShowcaseCard
-                product={heroProds[1]}
-                cls="sc-1"
-                factor={0.65}
-                mx={heroMx}
-                my={heroMy}
-                floatDur={5.6}
-                floatAmp={12}
-                featured={true}
-                onNav={navigate}
-              />
-              <ShowcaseCard
-                product={heroProds[2]}
-                cls="sc-2"
-                factor={1.5}
-                mx={heroMx}
-                my={heroMy}
-                floatDur={4.2}
-                floatAmp={-9}
-                featured={false}
-                onNav={navigate}
-              />
+              <HeroCard product={heroProds[0]} floatDur={4.6} floatAmp={-12} tall={false} onNav={navigate} delay={0} />
+              <HeroCard product={heroProds[1]} floatDur={5.4} floatAmp={10}  tall={true}  onNav={navigate} delay={0.7} />
+              <HeroCard product={heroProds[2]} floatDur={3.9} floatAmp={-8}  tall={false} onNav={navigate} delay={1.3} />
 
               <motion.div
-                className="price-tag pt-a"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ repeat: Infinity, duration: 3.4, ease: "easeInOut" }}
+                className="hpg-badge hpg-badge-a"
+                animate={{ y: [0, -7, 0] }}
+                transition={{ repeat: Infinity, duration: 3.2, ease: "easeInOut" }}
               >
                 🛒 Just added
               </motion.div>
               <motion.div
-                className="price-tag pt-b"
-                animate={{ y: [0, 7, 0] }}
-                transition={{ repeat: Infinity, duration: 4.1, ease: "easeInOut", delay: 1 }}
+                className="hpg-badge hpg-badge-b"
+                animate={{ y: [0, 6, 0] }}
+                transition={{ repeat: Infinity, duration: 4.0, ease: "easeInOut", delay: 1 }}
               >
                 ⚡ Flash deal
               </motion.div>
@@ -659,6 +622,11 @@ export default function Home() {
                         }`;
                       }}
                     />
+                    {p.mrp && p.mrp > p.price && (
+                      <span className="prod-disc-badge">
+                        {Math.round(((p.mrp - p.price) / p.mrp) * 100)}% OFF
+                      </span>
+                    )}
                     <button
                       className={`cart-quick${addedId === p._id ? " added" : ""}`}
                       onClick={(e) => handleAdd(e, p)}
@@ -678,6 +646,12 @@ export default function Home() {
                         <span className="prod-mrp">₹{p.mrp?.toLocaleString("en-IN")}</span>
                       )}
                     </div>
+                    {p.rating && (
+                      <div className="prod-rating-row">
+                        <span className="prod-star">★</span>
+                        <span className="prod-rating-val">{p.rating}</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

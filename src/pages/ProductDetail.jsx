@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ShoppingCart, Heart, Star, ChevronRight, ArrowLeft,
-  Package, Shield, Truck, Clock,
+  Package, Shield, Truck, Clock, Zap,
 } from "lucide-react";
 import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
@@ -109,8 +109,23 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = () => {
+    if (!user) {
+      toast.error("Please log in to add items to cart");
+      navigate("/login");
+      return;
+    }
     addToCart(product, qty);
     toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = () => {
+    if (!user) {
+      toast.error("Please log in to purchase");
+      navigate("/login");
+      return;
+    }
+    addToCart(product, qty);
+    navigate("/cart");
   };
 
   const handleSubmitReview = async (e) => {
@@ -268,6 +283,10 @@ export default function ProductDetail() {
               )}
 
               <div className="pd-actions">
+                <motion.button className="pd-btn-buy" onClick={handleBuyNow} disabled={!inStock} whileTap={{ scale: 0.97 }}>
+                  <Zap size={18} />
+                  Buy Now
+                </motion.button>
                 <motion.button className="pd-btn-cart" onClick={handleAddToCart} disabled={!inStock} whileTap={{ scale: 0.97 }}>
                   <ShoppingCart size={18} />
                   {inStock ? "Add to Cart" : "Out of Stock"}
