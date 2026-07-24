@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import "./Navbar.css";
 
-const SEARCH_CATS = ["All","Electronics","Fashion","Sports","Books","Home & Living","Beauty"];
+const SEARCH_CATS = ["All","Electronics","Fashion","Sports","Books","Home & Kitchen","Beauty"];
 
 const CAT_LINKS = [
   { label: "All",           cat: null,            icon: null,  hot: false },
@@ -18,7 +18,7 @@ const CAT_LINKS = [
   { label: "Fashion",       cat: "Fashion",       icon: "👗",  hot: false },
   { label: "Sports",        cat: "Sports",        icon: "⚽",  hot: false },
   { label: "Books",         cat: "Books",         icon: "📚",  hot: false },
-  { label: "Home & Living", cat: "Home & Living", icon: "🏠",  hot: false },
+  { label: "Home & Kitchen", cat: "Home & Kitchen", icon: "🏠",  hot: false },
   { label: "Beauty",        cat: "Beauty",        icon: "💄",  hot: false },
   { label: "Offers",        cat: null,            icon: null,  hot: true  },
   { label: "New Arrivals",  cat: null,            icon: null,  hot: false },

@@ -60,7 +60,7 @@ const CATS = [
   { name: "Fashion",       emoji: "👗", sub: "Men, Women, Kids" },
   { name: "Sports",        emoji: "⚽", sub: "Gear, Clothing, Equipment" },
   { name: "Books",         emoji: "📚", sub: "Fiction, Learning, Kids" },
-  { name: "Home & Living", emoji: "🏠", sub: "Decor, Kitchen, Garden" },
+  { name: "Home & Kitchen", emoji: "🏠", sub: "Appliances, Decor, Kitchen" },
   { name: "Beauty",        emoji: "💄", sub: "Skin, Hair, Fragrance" },
 ];
 

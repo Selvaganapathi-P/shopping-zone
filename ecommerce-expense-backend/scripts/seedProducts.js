@@ -140,9 +140,8 @@ async function seedProducts() {
   try {
     const existing = await Product.countDocuments();
     if (existing > 0) {
-      console.log(`Database already has ${existing} products. Skipping seed.`);
-      console.log("To re-seed, drop the products collection first.");
-      process.exit(0);
+      console.log(`Clearing ${existing} existing products…`);
+      await Product.deleteMany({});
     }
 
     const result = await Product.insertMany(PRODUCTS);
