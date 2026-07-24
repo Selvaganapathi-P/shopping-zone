@@ -529,25 +529,27 @@ export default function Home() {
       <section className="features-section">
         <div className="features-inner">
           <motion.div
-            className="section-label"
+            className="features-header"
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            Why Thansel Zovia
+            <span className="section-label">Why Thansel Zovia</span>
+            <h2 className="features-h2">Built Different.<br /><em>For Smart Shoppers.</em></h2>
           </motion.div>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
               <motion.div
                 key={f.id}
                 className={`fc fc-${f.bg}`}
-                initial={{ opacity: 0, y: 48 }}
+                initial={{ opacity: 0, y: 56 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: i * 0.13, duration: 0.64, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -8 }}
+                transition={{ delay: i * 0.14, duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -12, transition: { type: "spring", stiffness: 280, damping: 22 } }}
               >
+                <div className="fc-glow-ring" aria-hidden="true" />
                 <span className="fc-tag">{f.tag}</span>
                 <div className="fc-big">{f.big}</div>
                 <h3 className="fc-title">{f.title}</h3>
@@ -681,13 +683,13 @@ export default function Home() {
             <motion.div
               key={c.name}
               className={`bc bc-${i}`}
-              whileHover={{ scale: 1.025 }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              whileHover={{ scale: 1.028, transition: { type: "spring", stiffness: 280, damping: 22 } }}
               onClick={() => navigate(`/products?category=${encodeURIComponent(c.name)}`)}
             >
+              <span className="bc-watermark" aria-hidden="true">{c.name.split(" ")[0]}</span>
               <motion.span
                 className="bc-emoji"
-                whileHover={{ scale: 1.3, rotate: 12 }}
+                whileHover={{ scale: 1.28, rotate: 10 }}
                 transition={{ type: "spring", stiffness: 300, damping: 14 }}
               >
                 {c.emoji}
