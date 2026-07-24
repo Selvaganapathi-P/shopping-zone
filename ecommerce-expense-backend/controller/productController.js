@@ -1,5 +1,6 @@
-const Product = require("../model/productModel");
-const https   = require("https");
+const Product  = require("../model/productModel");
+const https    = require("https");
+const SEED_DATA = require("../scripts/seedData");
 
 const getProducts = async (req, res) => {
   try {
@@ -176,4 +177,17 @@ const setFlashSale = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale };
+const seedProductsHandler = async (req, res) => {
+  try {
+    const existing = await Product.countDocuments();
+    if (existing > 0) await Product.deleteMany({});
+    const result = await Product.insertMany(SEED_DATA);
+    const counts = {};
+    for (const p of result) counts[p.category] = (counts[p.category] || 0) + 1;
+    res.json({ message: `Seeded ${result.length} products`, counts });
+  } catch (err) {
+    res.status(500).json({ message: "Seed failed", error: err.message });
+  }
+};
+
+module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler };
