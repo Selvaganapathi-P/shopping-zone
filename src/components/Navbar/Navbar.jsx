@@ -10,18 +10,21 @@ import {
 } from "lucide-react";
 import "./Navbar.css";
 
-const SEARCH_CATS = ["All","Electronics","Fashion","Sports","Books","Home & Kitchen","Beauty"];
+const SEARCH_CATS = ["All","Electronics","Fashion","Home & Kitchen","Sports & Fitness","Beauty & Personal Care","Books","Groceries","Jewellery & Watches","Travel & Luggage"];
 
 const CAT_LINKS = [
-  { label: "All",           cat: null,            icon: null,  hot: false },
-  { label: "Electronics",   cat: "Electronics",   icon: "📱",  hot: false },
-  { label: "Fashion",       cat: "Fashion",       icon: "👗",  hot: false },
-  { label: "Sports",        cat: "Sports",        icon: "⚽",  hot: false },
-  { label: "Books",         cat: "Books",         icon: "📚",  hot: false },
-  { label: "Home & Kitchen", cat: "Home & Kitchen", icon: "🏠",  hot: false },
-  { label: "Beauty",        cat: "Beauty",        icon: "💄",  hot: false },
-  { label: "Offers",        cat: null,            icon: null,  hot: true  },
-  { label: "New Arrivals",  cat: null,            icon: null,  hot: false },
+  { label: "All",                   cat: null,                      icon: null,  hot: false },
+  { label: "Electronics",           cat: "Electronics",             icon: "📱",  hot: false },
+  { label: "Fashion",               cat: "Fashion",                 icon: "👗",  hot: false },
+  { label: "Home & Kitchen",        cat: "Home & Kitchen",          icon: "🏠",  hot: false },
+  { label: "Sports",                cat: "Sports & Fitness",        icon: "⚽",  hot: false },
+  { label: "Beauty",                cat: "Beauty & Personal Care",  icon: "💄",  hot: false },
+  { label: "Books",                 cat: "Books",                   icon: "📚",  hot: false },
+  { label: "Groceries",             cat: "Groceries",               icon: "🛒",  hot: false },
+  { label: "Jewellery",             cat: "Jewellery & Watches",     icon: "💍",  hot: false },
+  { label: "Travel",                cat: "Travel & Luggage",        icon: "🧳",  hot: false },
+  { label: "Offers",                cat: null,                      icon: null,  hot: true  },
+  { label: "New Arrivals",          cat: null,                      icon: null,  hot: false },
 ];
 
 export default function Navbar({ transparent = false }) {

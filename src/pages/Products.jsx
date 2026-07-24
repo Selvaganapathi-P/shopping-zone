@@ -10,17 +10,25 @@ import toast from "react-hot-toast";
 import { Search, SlidersHorizontal, Star, ShoppingCart, Check, X, Heart, Mic, MicOff, Zap } from "lucide-react";
 import "./Products.css";
 
-const CATEGORIES   = ["All","Electronics","Fashion","Home & Kitchen","Sports","Books","Beauty"];
 const SORT_OPTIONS = ["Default","Price: Low to High","Price: High to Low","Top Rated"];
 
 const CAT_FILTERS = {
   Electronics: {
-    RAM:     ["2GB","4GB","6GB","8GB","12GB","16GB"],
-    Storage: ["16GB","32GB","64GB","128GB","256GB","512GB","1TB"],
+    RAM:     ["4GB","6GB","8GB","12GB","16GB","32GB","48GB","64GB"],
+    Storage: ["64GB","128GB","256GB","512GB","1TB","2TB"],
   },
   Fashion: {
-    Size:  ["XS","S","M","L","XL","XXL"],
-    Color: ["Black","White","Red","Blue","Green","Yellow","Pink","Grey"],
+    Size:  ["XS","S","M","L","XL","XXL","UK6","UK7","UK8","UK9","UK10"],
+    Color: ["Black","White","Red","Blue","Green","Navy","Grey","Pink","Beige"],
+  },
+  "Home & Kitchen": {
+    Type: ["Appliance","Cookware","Furniture","Mattress","Storage"],
+  },
+  "Sports & Fitness": {
+    Type: ["Cricket","Football","Badminton","Gym","Yoga","Running"],
+  },
+  "Beauty & Personal Care": {
+    Type: ["Skin Care","Hair Care","Makeup","Grooming"],
   },
 };
 
@@ -88,12 +96,15 @@ export default function Products() {
   const navigate                                   = useNavigate();
   const [products, setProducts]                   = useState([]);
   const [filtered, setFiltered]                   = useState([]);
+  const [categories, setCategories]               = useState(["All"]);
+  const [subcategories, setSubcategories]         = useState([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState("All");
   const [loading, setLoading]                     = useState(true);
   const [search, setSearch]                       = useState("");
   const [suggestions, setSuggestions]             = useState([]);
   const [showSuggestions, setShowSuggestions]     = useState(false);
   const [selectedCategory, setSelectedCategory]   = useState("All");
-  const [priceRange, setPriceRange]               = useState(100000);
+  const [priceRange, setPriceRange]               = useState(500000);
   const [sortBy, setSortBy]                       = useState("Default");
   const [addedId, setAddedId]                     = useState(null);
   const [sidebarOpen, setSidebarOpen]             = useState(false);
@@ -112,7 +123,11 @@ export default function Products() {
 
   useEffect(() => {
     API.get("/products")
-      .then(({ data }) => setProducts(data))
+      .then(({ data }) => {
+        setProducts(data);
+        const cats = ["All", ...Array.from(new Set(data.map(p => p.category).filter(Boolean))).sort()];
+        setCategories(cats);
+      })
       .catch(() => toast.error("Failed to load products."))
       .finally(() => setLoading(false));
   }, []);
@@ -121,8 +136,18 @@ export default function Products() {
     const cat = searchParams.get("category");
     const q   = searchParams.get("q");
     setSelectedCategory(cat ? decodeURIComponent(cat) : "All");
+    setSelectedSubcategory("All");
     if (q) setSearch(decodeURIComponent(q));
   }, [searchParams]);
+
+  useEffect(() => {
+    if (selectedCategory === "All") { setSubcategories([]); return; }
+    const subs = ["All", ...Array.from(new Set(
+      products.filter(p => p.category === selectedCategory).map(p => p.subcategory).filter(Boolean)
+    )).sort()];
+    setSubcategories(subs.length > 2 ? subs : []);
+    setSelectedSubcategory("All");
+  }, [selectedCategory, products]);
 
   // Search autocomplete
   useEffect(() => {
@@ -152,7 +177,12 @@ export default function Products() {
   useEffect(() => {
     let result = [...products];
     if (selectedCategory !== "All") result = result.filter((p) => p.category.trim() === selectedCategory.trim());
-    if (search) result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+    if (selectedSubcategory !== "All") result = result.filter((p) => p.subcategory === selectedSubcategory);
+    if (search) result = result.filter((p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.brand?.toLowerCase().includes(search.toLowerCase()) ||
+      p.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
+    );
     result = result.filter((p) => p.price <= priceRange);
     // Advanced per-category chip filters (keyword match in name/description)
     Object.entries(advFilters).forEach(([group, vals]) => {
@@ -186,7 +216,7 @@ export default function Products() {
     if (sortBy === "Price: High to Low") result.sort((a,b) => b.price - a.price);
     if (sortBy === "Top Rated")          result.sort((a,b) => b.rating - a.rating);
     setFiltered(result);
-  }, [products, selectedCategory, search, priceRange, sortBy, advFilters]);
+  }, [products, selectedCategory, selectedSubcategory, search, priceRange, sortBy, advFilters]);
 
   const handleAddToCart = (e, product) => {
     e.stopPropagation();
@@ -262,7 +292,7 @@ export default function Products() {
           </div>
           <div className="filter-group">
             <h4>Category</h4>
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <label key={cat} className={`filter-label ${selectedCategory === cat ? "active" : ""}`}>
                 <input type="radio" name="category" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} className="sr-only" />
                 <span className="filter-check">{selectedCategory === cat && <Check size={12} />}</span>
@@ -270,11 +300,23 @@ export default function Products() {
               </label>
             ))}
           </div>
+          {subcategories.length > 0 && (
+            <div className="filter-group">
+              <h4>Subcategory</h4>
+              {subcategories.map((sub) => (
+                <label key={sub} className={`filter-label ${selectedSubcategory === sub ? "active" : ""}`}>
+                  <input type="radio" name="subcategory" checked={selectedSubcategory === sub} onChange={() => setSelectedSubcategory(sub)} className="sr-only" />
+                  <span className="filter-check">{selectedSubcategory === sub && <Check size={12} />}</span>
+                  {sub}
+                </label>
+              ))}
+            </div>
+          )}
           <div className="filter-group">
             <h4>Max Price</h4>
             <div className="price-display">₹{priceRange.toLocaleString()}</div>
-            <input type="range" min={100} max={100000} step={100} value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} className="price-slider" />
-            <div className="price-labels"><span>₹100</span><span>₹1,00,000</span></div>
+            <input type="range" min={100} max={500000} step={500} value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} className="price-slider" />
+            <div className="price-labels"><span>₹100</span><span>₹5,00,000</span></div>
           </div>
 
           {/* Advanced per-category filters */}
@@ -391,13 +433,16 @@ export default function Products() {
             </select>
           </div>
 
-          {(selectedCategory !== "All" || priceRange < 100000) && (
+          {(selectedCategory !== "All" || selectedSubcategory !== "All" || priceRange < 500000) && (
             <div className="active-filters">
               {selectedCategory !== "All" && (
-                <span className="filter-chip">{selectedCategory}<button onClick={() => setSelectedCategory("All")}><X size={12} /></button></span>
+                <span className="filter-chip">{selectedCategory}<button onClick={() => { setSelectedCategory("All"); setSelectedSubcategory("All"); }}><X size={12} /></button></span>
               )}
-              {priceRange < 100000 && (
-                <span className="filter-chip">Under ₹{priceRange.toLocaleString()}<button onClick={() => setPriceRange(100000)}><X size={12} /></button></span>
+              {selectedSubcategory !== "All" && (
+                <span className="filter-chip">{selectedSubcategory}<button onClick={() => setSelectedSubcategory("All")}><X size={12} /></button></span>
+              )}
+              {priceRange < 500000 && (
+                <span className="filter-chip">Under ₹{priceRange.toLocaleString()}<button onClick={() => setPriceRange(500000)}><X size={12} /></button></span>
               )}
             </div>
           )}

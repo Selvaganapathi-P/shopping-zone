@@ -33,7 +33,7 @@ const TABS = [
   { id: "Activities",  label: "Activities",  Icon: Clock },
 ];
 
-const CATEGORIES = ["Electronics","Fashion","Home & Kitchen","Sports","Books","Beauty"];
+const CATEGORIES = ["Electronics","Fashion","Home & Kitchen","Sports & Fitness","Beauty & Personal Care","Books","Groceries","Jewellery & Watches","Travel & Luggage"];
 const MONTHS     = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const STATUS_STEPS  = ["pending","confirmed","shipped","out_for_delivery","delivered"];
