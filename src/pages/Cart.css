@@ -1,4 +1,4 @@
-﻿.cart-page { min-height: 100vh; background: #0f172a; color: #f8fafc; font-family: "Inter", sans-serif; padding-top: 68px; }
+﻿.cart-page { min-height: 100vh; background: #0f172a; color: #f8fafc; font-family: "Inter", sans-serif; padding-top: 104px; }
 .cart-layout { max-width: 1100px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start; }
 
 /* Empty cart */

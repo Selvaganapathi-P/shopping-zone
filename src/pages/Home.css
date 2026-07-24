@@ -144,7 +144,7 @@
   align-items: center;
   width: 100%;
   max-width: 1280px;
-  padding: 120px 64px 100px;
+  padding: 140px 64px 100px;
 }
 
 /* ── Left text ── */
@@ -1252,7 +1252,7 @@
 }
 
 @media (max-width: 768px) {
-  .hero-inner   { padding: 90px 24px 64px; }
+  .hero-inner   { padding: 120px 24px 64px; }
   .h1-word      { font-size: clamp(48px, 12vw, 80px); }
   .features-inner, .cats-section .section-head, .bento-grid,
   .trending-section .section-head, .trending-section .carousel-track,

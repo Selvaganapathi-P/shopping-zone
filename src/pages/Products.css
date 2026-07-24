@@ -4,7 +4,7 @@
   background: #F4F4F8;
   color: #111118;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  padding-top: 68px;
+  padding-top: 104px;
 }
 .products-layout { display: flex; min-height: calc(100vh - 68px); }
 

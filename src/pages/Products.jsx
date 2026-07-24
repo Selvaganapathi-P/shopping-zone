@@ -119,7 +119,9 @@ export default function Products() {
 
   useEffect(() => {
     const cat = searchParams.get("category");
+    const q   = searchParams.get("q");
     setSelectedCategory(cat ? decodeURIComponent(cat) : "All");
+    if (q) setSearch(decodeURIComponent(q));
   }, [searchParams]);
 
   // Search autocomplete
