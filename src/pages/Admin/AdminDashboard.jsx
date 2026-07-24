@@ -205,6 +205,32 @@ export default function AdminDashboard() {
     } catch { toast.error("Delete failed."); }
   };
 
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [seeding,     setSeeding]     = useState(false);
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm(`Delete ALL ${products.length} products? This cannot be undone.`)) return;
+    setDeletingAll(true);
+    try {
+      const { data } = await API.delete("/products/all");
+      setProducts([]);
+      toast.success(data.message);
+    } catch { toast.error("Failed to delete all products."); }
+    finally { setDeletingAll(false); }
+  };
+
+  const handleSeedProducts = async () => {
+    if (!window.confirm("This will DELETE all existing products and seed fresh catalog data. Continue?")) return;
+    setSeeding(true);
+    try {
+      const { data } = await API.post("/products/seed");
+      toast.success(data.message);
+      const { data: fresh } = await API.get("/products");
+      setProducts(fresh);
+    } catch { toast.error("Seeding failed."); }
+    finally { setSeeding(false); }
+  };
+
   const handleToggleVisibility = async (product) => {
     try {
       const { data } = await API.patch(`/products/${product._id}/visibility`);
@@ -554,6 +580,12 @@ export default function AdminDashboard() {
               <>
                 <button className="add-product-btn" style={{ background:"rgba(59,130,246,0.15)", color:"#3b82f6", border:"1px solid rgba(59,130,246,0.3)" }} onClick={() => { setBulkEdits({}); setShowBulkModal(true); }}>
                   <Layers size={15} /> Bulk Stock
+                </button>
+                <button className="add-product-btn" style={{ background:"rgba(234,88,12,0.12)", color:"#ea580c", border:"1px solid rgba(234,88,12,0.3)" }} onClick={handleSeedProducts} disabled={seeding}>
+                  {seeding ? "Seeding…" : "🌱 Seed Catalog"}
+                </button>
+                <button className="add-product-btn" style={{ background:"rgba(239,68,68,0.12)", color:"#ef4444", border:"1px solid rgba(239,68,68,0.3)" }} onClick={handleDeleteAll} disabled={deletingAll}>
+                  <Trash2 size={15} /> {deletingAll ? "Deleting…" : "Delete All"}
                 </button>
                 <button className="add-product-btn" onClick={openAddModal}>
                   <Plus size={16} /> Add Product

@@ -177,6 +177,15 @@ const setFlashSale = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+const deleteAllProducts = async (req, res) => {
+  try {
+    const { deletedCount } = await Product.deleteMany({});
+    res.json({ message: `Deleted ${deletedCount} products` });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete all products", error: err.message });
+  }
+};
+
 const seedProductsHandler = async (req, res) => {
   try {
     const existing = await Product.countDocuments();
@@ -190,4 +199,4 @@ const seedProductsHandler = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler };
+module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler, deleteAllProducts };
