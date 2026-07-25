@@ -1,796 +1,619 @@
+import { useRef, useEffect, useState, Suspense } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Float, MeshDistortMaterial, Environment } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
-import { useRef, useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import Navbar from "../components/Navbar/Navbar";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
+import {
+  ShoppingBag, ArrowRight, Star, Zap, Shield, RotateCcw,
+  Headphones, ChevronRight, TrendingUp, Sparkles, Package,
+  Truck, BadgeCheck, Heart,
+} from "lucide-react";
 import API from "../api/axios";
+import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { MAIN_CATEGORIES } from "../config/categories";
 import toast from "react-hot-toast";
 import "./Home.css";
 
-// ── File-level constants ───────────────────────────────────────────────────
+gsap.registerPlugin(ScrollTrigger);
 
-const MARQUEE_ITEMS = [
-  "Shop Smart", "Track Every Rupee", "50,000+ Customers",
-  "Free Delivery", "Easy Returns", "Premium Quality",
-  "New Arrivals Daily", "Zero Hidden Charges",
-];
-
-const LIVE_EVENTS = [
-  { name: "Rahul M.", city: "Mumbai",    product: "iPhone 15 Pro",       emoji: "📱" },
-  { name: "Priya S.", city: "Delhi",     product: "Nike Air Max",         emoji: "👟" },
-  { name: "Arjun K.", city: "Bangalore", product: "Sony WH-1000XM5",     emoji: "🎧" },
-  { name: "Sneha R.", city: "Chennai",   product: "MacBook Air M2",       emoji: "💻" },
-  { name: "Vivek T.", city: "Hyderabad", product: "Levi's 501 Jeans",    emoji: "👖" },
-  { name: "Neha P.",  city: "Pune",      product: "Canon EOS R50",        emoji: "📸" },
-  { name: "Karan L.", city: "Kolkata",   product: "boAt Airdopes 141",   emoji: "🎵" },
-  { name: "Divya A.", city: "Ahmedabad", product: "Philips Air Fryer",   emoji: "🍳" },
-];
-
-const FEATURES = [
-  {
-    id: "catalog",
-    tag: "Massive Selection",
-    big: "10K+",
-    title: "Products Curated Daily",
-    desc: "From electronics to fashion — a living catalogue updated every day, across every category you care about.",
-    bg: "dark",
-  },
-  {
-    id: "track",
-    tag: "Smart Finance",
-    big: "₹0",
-    title: "Hidden Charges. Zero.",
-    desc: "Auto-categorised expense insights from every order. See exactly where your money goes, beautifully.",
-    bg: "light",
-  },
-  {
-    id: "delivery",
-    tag: "Fast & Free",
-    big: "499",
-    title: "Free From ₹499",
-    desc: "Express shipping across India. Order by 6 PM and get it the next morning — no excuses, no delays.",
-    bg: "accent",
-  },
-];
-
-const CATS = [
-  { name: "Electronics",   emoji: "📱", sub: "Phones, Laptops, Cameras" },
-  { name: "Fashion",       emoji: "👗", sub: "Men, Women, Kids" },
-  { name: "Sports",        emoji: "⚽", sub: "Gear, Clothing, Equipment" },
-  { name: "Books",         emoji: "📚", sub: "Fiction, Learning, Kids" },
-  { name: "Home & Kitchen", emoji: "🏠", sub: "Appliances, Decor, Kitchen" },
-  { name: "Beauty",        emoji: "💄", sub: "Skin, Hair, Fragrance" },
-];
-
-const STATS = [
-  { target: 10000, suffix: "+",  prefix: "",  label: "Products",     dec: 0 },
-  { target: 50,    suffix: "K+", prefix: "",  label: "Customers",    dec: 0 },
-  { target: 99,    suffix: "%",  prefix: "",  label: "Satisfaction", dec: 0 },
-  { target: 4.9,   suffix: "★",  prefix: "",  label: "App Rating",   dec: 1 },
-];
-
-const fadeUp = {
-  hidden:  { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } },
-};
-const slideL = {
-  hidden:  { opacity: 0, x: -52 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.66, ease: [0.22, 1, 0.36, 1] } },
-};
-const slideR = {
-  hidden:  { opacity: 0, x: 52 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.66, ease: [0.22, 1, 0.36, 1] } },
-};
-
-// ── Custom glow cursor ─────────────────────────────────────────────────────
-
-function GlowCursor() {
-  const dotRef  = useRef(null);
-  const glowRef = useRef(null);
-  const pos     = useRef({ x: -400, y: -400 });
-  const lerp    = useRef({ x: -400, y: -400 });
-  const rafRef  = useRef(null);
-
-  useEffect(() => {
-    const onMove = (e) => { pos.current = { x: e.clientX, y: e.clientY }; };
-    const tick = () => {
-      lerp.current.x += (pos.current.x - lerp.current.x) * 0.07;
-      lerp.current.y += (pos.current.y - lerp.current.y) * 0.07;
-      if (dotRef.current)
-        dotRef.current.style.transform =
-          `translate(${pos.current.x - 4}px,${pos.current.y - 4}px)`;
-      if (glowRef.current)
-        glowRef.current.style.transform =
-          `translate(${lerp.current.x - 230}px,${lerp.current.y - 230}px)`;
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
+// ── Three.js floating orb ────────────────────────────────────────────────────
+function HeroOrb() {
+  const mesh = useRef();
+  const wire = useRef();
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (mesh.current) {
+      mesh.current.rotation.y = t * 0.18;
+      mesh.current.rotation.z = t * 0.09;
+    }
+    if (wire.current) {
+      wire.current.rotation.y = -t * 0.12;
+    }
+  });
   return (
-    <>
-      <div ref={dotRef}  className="c-dot"  aria-hidden="true" />
-      <div ref={glowRef} className="c-glow" aria-hidden="true" />
-    </>
+    <Float speed={1.6} rotationIntensity={0.4} floatIntensity={0.8}>
+      <mesh ref={mesh}>
+        <icosahedronGeometry args={[1.5, 1]} />
+        <MeshDistortMaterial
+          color="#ea580c"
+          emissive="#7c2d12"
+          emissiveIntensity={0.5}
+          metalness={0.85}
+          roughness={0.08}
+          distort={0.35}
+          speed={2.5}
+        />
+      </mesh>
+      <mesh ref={wire} scale={1.7}>
+        <icosahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color="#f97316" transparent opacity={0.06} wireframe />
+      </mesh>
+    </Float>
   );
 }
 
-// ── Hero product grid card ─────────────────────────────────────────────────
+// ── Marquee brands ────────────────────────────────────────────────────────────
+const BRANDS = [
+  "Samsung","Apple","OnePlus","Xiaomi","Nike","Adidas","Levi's","Sony",
+  "Fossil","L'Oréal","Prestige","Dell","HP","boAt","Mamaearth","Canon",
+  "Tanishq","American Tourister","Philips","Lenovo",
+];
 
-function HeroCard({ product, floatDur, floatAmp, tall, onNav, delay = 0 }) {
-  const fallback = `https://placehold.co/300x240/1A1A2E/6666AA?text=${
-    encodeURIComponent(product?.name?.split(" ")[0] || "Item")
-  }`;
-  const disc = product?.mrp && product.mrp > product.price
+// ── Category icons ────────────────────────────────────────────────────────────
+const CAT_META = {
+  "Electronics":            { icon: "📱", color: "#3b82f6", bg: "rgba(59,130,246,0.1)"  },
+  "Fashion":                { icon: "👗", color: "#ec4899", bg: "rgba(236,72,153,0.1)"  },
+  "Home & Kitchen":         { icon: "🏠", color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
+  "Beauty & Personal Care": { icon: "💄", color: "#a855f7", bg: "rgba(168,85,247,0.1)"  },
+  "Sports & Fitness":       { icon: "⚽", color: "#22c55e", bg: "rgba(34,197,94,0.1)"   },
+  "Books":                  { icon: "📚", color: "#6366f1", bg: "rgba(99,102,241,0.1)"  },
+  "Groceries":              { icon: "🛒", color: "#84cc16", bg: "rgba(132,204,22,0.1)"  },
+  "Jewellery & Watches":    { icon: "💍", color: "#eab308", bg: "rgba(234,179,8,0.1)"   },
+  "Travel & Luggage":       { icon: "🧳", color: "#06b6d4", bg: "rgba(6,182,212,0.1)"   },
+  "Baby Products":          { icon: "🍼", color: "#f97316", bg: "rgba(249,115,22,0.1)"  },
+  "Pet Supplies":           { icon: "🐾", color: "#8b5cf6", bg: "rgba(139,92,246,0.1)"  },
+  "Automotive":             { icon: "🚗", color: "#64748b", bg: "rgba(100,116,139,0.1)" },
+  "Office Supplies":        { icon: "🖊️", color: "#0ea5e9", bg: "rgba(14,165,233,0.1)"  },
+  "Musical Instruments":    { icon: "🎸", color: "#d946ef", bg: "rgba(217,70,239,0.1)"  },
+};
+
+const FEATURES = [
+  { icon: Truck,      title: "Free Delivery",   desc: "Free shipping on orders above ₹499",     color: "#22c55e" },
+  { icon: RotateCcw,  title: "Easy Returns",    desc: "7-day hassle-free return policy",          color: "#3b82f6" },
+  { icon: Shield,     title: "100% Secure",     desc: "Bank-grade encrypted payments",            color: "#a855f7" },
+  { icon: Headphones, title: "24/7 Support",    desc: "Dedicated team available round the clock", color: "#ea580c" },
+];
+
+const STATS = [
+  { value: 10000, suffix: "+",  label: "Products",       decimal: false },
+  { value: 50,    suffix: "K+", label: "Happy Customers",decimal: false },
+  { value: 14,    suffix: "",   label: "Categories",     decimal: false },
+  { value: 4.9,   suffix: "★",  label: "Rating",        decimal: true  },
+];
+
+const LIVE_PURCHASES = [
+  { name: "Rahul M.", city: "Mumbai",    product: "iPhone 16 Pro", emoji: "📱" },
+  { name: "Priya S.", city: "Delhi",     product: "Nike Air Max",  emoji: "👟" },
+  { name: "Arjun K.", city: "Bangalore", product: "Sony XM5",      emoji: "🎧" },
+  { name: "Sneha R.", city: "Chennai",   product: "MacBook M3",    emoji: "💻" },
+  { name: "Vivek T.", city: "Hyderabad", product: "Levi's 511",    emoji: "👖" },
+];
+
+const cardV = {
+  hidden:  { opacity: 0, y: 36 },
+  visible: (i) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.55, ease: [0.16,1,0.3,1] } }),
+};
+
+// ── ProductCard ───────────────────────────────────────────────────────────────
+function ProductCard({ product, onAdd }) {
+  const navigate = useNavigate();
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = (e) => {
+    e.stopPropagation();
+    onAdd(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
+
+  const discount = product.mrp && product.mrp > product.price
     ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
-    : 0;
+    : null;
 
   return (
     <motion.div
-      className={`hpg-card${tall ? " hpg-tall" : ""}`}
-      animate={{ y: [0, floatAmp, 0] }}
-      transition={{ repeat: Infinity, duration: floatDur, ease: "easeInOut", delay }}
-      onClick={() => product?._id && onNav(`/products/${product._id}`)}
-      style={{ cursor: product?._id ? "pointer" : "default" }}
+      className="hpc-card"
+      onClick={() => navigate(`/products/${product._id}`)}
+      whileHover={{ y: -6 }}
+      transition={{ type: "spring", stiffness: 280, damping: 22 }}
     >
-      {product ? (
-        <>
-          <div className={`hpg-img${tall ? " hpg-img-tall" : ""}`}>
-            <img src={product.image} alt={product.name}
-              onError={(e) => { e.target.onerror = null; e.target.src = fallback; }} />
-            {disc > 0 && <span className="hpg-disc">{disc}% OFF</span>}
+      <div className="hpc-img-wrap">
+        <img
+          src={product.image || "https://placehold.co/400x400/12121f/ea580c?text=No+Img"}
+          alt={product.name}
+          onError={(e) => { e.target.src = "https://placehold.co/400x400/12121f/ea580c?text=No+Img"; }}
+        />
+        {discount && <span className="hpc-discount">{discount}% OFF</span>}
+        {product.isTrending && <span className="hpc-trend"><Zap size={10}/> Hot</span>}
+      </div>
+      <div className="hpc-body">
+        <p className="hpc-cat">{product.subcategory || product.category}</p>
+        <h3 className="hpc-name">{product.name}</h3>
+        <div className="hpc-meta">
+          <div className="hpc-price-row">
+            <span className="hpc-price">₹{product.price.toLocaleString()}</span>
+            {product.mrp && product.mrp > product.price && (
+              <span className="hpc-mrp">₹{product.mrp.toLocaleString()}</span>
+            )}
           </div>
-          <div className="hpg-info">
-            <span className="hpg-cat">{product.category}</span>
-            <span className="hpg-name">{product.name}</span>
-            <div className="hpg-price-row">
-              <span className="hpg-price">₹{product.price?.toLocaleString("en-IN")}</span>
-              {disc > 0 && <span className="hpg-mrp">₹{product.mrp?.toLocaleString("en-IN")}</span>}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="hpg-shimmer" />
-      )}
+          <span className="hpc-rating"><Star size={11} fill="#f59e0b" stroke="none" /> {product.rating}</span>
+        </div>
+        <motion.button
+          className={`hpc-btn ${added ? "hpc-btn-added" : ""}`}
+          onClick={handleAdd}
+          whileTap={{ scale: 0.96 }}
+        >
+          {added ? <><BadgeCheck size={15}/> Added!</> : <><ShoppingBag size={15}/> Add to Cart</>}
+        </motion.button>
+      </div>
     </motion.div>
   );
 }
 
-// ── Live activity toast ────────────────────────────────────────────────────
-
-function LiveActivity() {
-  const [current, setCurrent] = useState(null);
-  const [visible, setVisible] = useState(false);
-  const idx = useRef(0);
-
-  useEffect(() => {
-    const show = () => {
-      idx.current = (idx.current + 1) % LIVE_EVENTS.length;
-      setCurrent(LIVE_EVENTS[idx.current]);
-      setVisible(true);
-      setTimeout(() => setVisible(false), 3200);
-    };
-    const t  = setTimeout(show, 2600);
-    const iv = setInterval(show, 5500);
-    return () => { clearTimeout(t); clearInterval(iv); };
-  }, []);
-
-  return (
-    <div className="live-wrap" aria-live="polite">
-      <AnimatePresence>
-        {visible && current && (
-          <motion.div
-            key={current.product}
-            className="live-toast"
-            initial={{ opacity: 0, y: 26, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -14, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 360, damping: 28 }}
-          >
-            <span className="live-emoji">{current.emoji}</span>
-            <div className="live-text">
-              <strong>{current.name}</strong> from {current.city}
-              <p>just bought {current.product}</p>
-            </div>
-            <span className="live-pulse" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ── Marquee strip ──────────────────────────────────────────────────────────
-
-function Marquee() {
-  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
-  return (
-    <div className="mq-outer" aria-hidden="true">
-      <div className="mq-track">
-        {items.map((item, i) => (
-          <span key={i} className="mq-item">
-            {item} <span className="mq-sep">✦</span>{" "}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Magnetic button ────────────────────────────────────────────────────────
-
-function MagneticBtn({ children, className, onClick }) {
-  const ref = useRef(null);
-  const [xy, setXY] = useState({ x: 0, y: 0 });
-
-  const onMove = (e) => {
-    const r = ref.current.getBoundingClientRect();
-    setXY({
-      x: (e.clientX - r.left - r.width  / 2) * 0.22,
-      y: (e.clientY - r.top  - r.height / 2) * 0.22,
-    });
-  };
-
-  return (
-    <motion.button
-      ref={ref}
-      className={className}
-      animate={{ x: xy.x, y: xy.y }}
-      transition={{ type: "spring", stiffness: 340, damping: 22 }}
-      onMouseMove={onMove}
-      onMouseLeave={() => setXY({ x: 0, y: 0 })}
-      onClick={onClick}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-// ── Count-up hook ──────────────────────────────────────────────────────────
-
-function useCountUp(target, dur, dec) {
-  const [val, setVal] = useState(0);
-  const wrapRef = useRef(null);
-  const started = useRef(false);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || started.current) return;
-        started.current = true;
-        const t0 = performance.now();
-        const step = (now) => {
-          const p    = Math.min((now - t0) / dur, 1);
-          const ease = 1 - Math.pow(1 - p, 3);
-          setVal(+(target * ease).toFixed(dec));
-          if (p < 1) requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-      },
-      { threshold: 0.5 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [target, dur, dec]);
-
-  return [val, wrapRef];
-}
-
-function StatCard({ target, suffix, prefix, label, dec }) {
-  const [val, ref] = useCountUp(target, 1800, dec);
-  return (
-    <div ref={ref} className="stat-card">
-      <div className="stat-num">
-        {prefix}{dec ? val.toFixed(dec) : Math.round(val).toLocaleString("en-IN")}{suffix}
-      </div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-}
-
-// ── Carousel hook ──────────────────────────────────────────────────────────
-
-function useCarousel() {
-  const trackRef = useRef(null);
-  const [atStart, setAtStart] = useState(true);
-  const [atEnd,   setAtEnd]   = useState(false);
-
-  const check = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    setAtStart(el.scrollLeft < 8);
-    setAtEnd(el.scrollLeft >= el.scrollWidth - el.clientWidth - 8);
-  }, []);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", check, { passive: true });
-    check();
-    return () => el.removeEventListener("scroll", check);
-  }, [check]);
-
-  const scroll = (dir) => {
-    const el = trackRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * 320, behavior: "smooth" });
-  };
-
-  return { trackRef, atStart, atEnd, scroll };
-}
-
-// ── Home ───────────────────────────────────────────────────────────────────
-
+// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function Home() {
   const navigate  = useNavigate();
-  const heroRef   = useRef(null);
-
-  const [products, setProducts] = useState([]);
-  const [addedId,  setAddedId]  = useState(null);
-
   const { addToCart } = useCart();
-  const { user }      = useAuth();
-  const carousel      = useCarousel();
+  const { user }  = useAuth();
 
-  const { scrollYProgress: pageY } = useScroll();
-  const { scrollYProgress: heroP } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroFade   = useTransform(heroP, [0, 0.72], [1, 0]);
-  const heroShift  = useTransform(heroP, [0, 1], ["0%", "14%"]);
-  // Cinematic: hero frame shrinks and gets rounded corners as user scrolls
-  const heroScale  = useTransform(heroP, [0, 1], [1, 0.84]);
-  const heroRadius = useTransform(heroP, [0, 1], [0, 28]);
+  const heroRef    = useRef(null);
+  const statsRef   = useRef(null);
+  const sectionsRef= useRef(null);
 
+  const [products,  setProducts]  = useState([]);
+  const [trending,  setTrending]  = useState([]);
+  const [newArrivals, setNew]     = useState([]);
+  const [liveIdx,   setLiveIdx]   = useState(0);
+  const [showLive,  setShowLive]  = useState(false);
+  const [loading,   setLoading]   = useState(true);
+
+  // ── Fetch products ──────────────────────────────────────────────────────────
   useEffect(() => {
     API.get("/products")
-      .then(({ data }) => setProducts(Array.isArray(data) ? data.slice(0, 18) : []))
-      .catch(() => {});
+      .then(({ data }) => {
+        setProducts(data);
+        setTrending(data.filter(p => p.isTrending || p.isBestSeller).slice(0, 10));
+        setNew(data.filter(p => p.isNewArrival).slice(0, 8));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleAdd = (e, p) => {
-    e.stopPropagation();
-    if (!user) {
-      toast.error("Please log in to add items to cart");
-      navigate("/login");
-      return;
-    }
-    addToCart(p);
-    setAddedId(p._id);
-    toast.success(`${p.name} added to cart!`);
-    setTimeout(() => setAddedId(null), 2000);
+  // ── GSAP hero reveal ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: 0.1 });
+      tl.from(".hero-badge",   { opacity:0, y:16, duration:0.5, ease:"power3.out" })
+        .from(".hero-line",    { opacity:0, y:70, skewY:2, stagger:0.12, duration:0.85, ease:"power4.out" }, "-=0.2")
+        .from(".hero-sub",     { opacity:0, y:24, duration:0.6, ease:"power3.out" }, "-=0.4")
+        .from(".hero-ctas > *",{ opacity:0, y:18, stagger:0.1, duration:0.5, ease:"power3.out" }, "-=0.3")
+        .from(".hero-stat",    { opacity:0, y:16, stagger:0.08, duration:0.4, ease:"power3.out" }, "-=0.2");
+
+      // Scroll-triggered reveals
+      gsap.utils.toArray(".reveal-section").forEach(el => {
+        gsap.fromTo(el,
+          { opacity:0, y:50 },
+          { opacity:1, y:0, duration:0.8, ease:"power3.out",
+            scrollTrigger: { trigger:el, start:"top 88%", once:true } }
+        );
+      });
+
+      // GSAP counter animation
+      gsap.utils.toArray(".stat-num").forEach(el => {
+        const target  = parseFloat(el.dataset.val);
+        const dec     = el.dataset.dec === "1";
+        const obj     = { n: 0 };
+        gsap.to(obj, {
+          n: target,
+          duration: 2.2,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          onUpdate: () => {
+            el.textContent = dec
+              ? obj.n.toFixed(1)
+              : Math.round(obj.n).toLocaleString();
+          },
+        });
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ── Live purchase ticker ────────────────────────────────────────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLive(true), 3500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!showLive) return;
+    const iv = setInterval(() => {
+      setShowLive(false);
+      setTimeout(() => {
+        setLiveIdx(i => (i + 1) % LIVE_PURCHASES.length);
+        setShowLive(true);
+      }, 500);
+    }, 4500);
+    return () => clearInterval(iv);
+  }, [showLive]);
+
+  const handleAdd = (product) => {
+    if (!user) { toast.error("Login to add to cart"); navigate("/login"); return; }
+    addToCart(product);
+    toast.success(`${product.name.split(" ").slice(0,3).join(" ")} added!`);
   };
 
-  const heroProds = products.length >= 3
-    ? [products[0], products[1], products[2]]
-    : [null, null, null];
+  // ── Visible categories (top 8) ─────────────────────────────────────────────
+  const visibleCats = MAIN_CATEGORIES.slice(0, 8);
 
   return (
-    <div className="home-page">
-      <GlowCursor />
+    <div className="home-root" ref={heroRef}>
       <Navbar transparent />
 
-      {/* ── Scroll progress bar ── */}
-      <motion.div className="scroll-bar" style={{ scaleX: pageY }} />
+      {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
+      <section className="home-hero">
+        {/* Glow orbs */}
+        <div className="hero-orb hero-orb-1" />
+        <div className="hero-orb hero-orb-2" />
+        <div className="hero-orb hero-orb-3" />
 
-      {/* ═══════════════ HERO ═══════════════ */}
-      <section
-        className="hero-section"
-        ref={heroRef}
-      >
-        {/* Cinematic frame: scales down + rounds corners on scroll */}
-        <motion.div
-          className="hero-frame"
-          style={{ scale: heroScale, borderRadius: heroRadius }}
-        >
-          {/* Aurora + grain background */}
-          <div className="hero-bg" aria-hidden="true">
-            <div className="blob b1" />
-            <div className="blob b2" />
-            <div className="blob b3" />
-            <div className="h-grain" />
-            <div className="hero-grid-lines" />
-          </div>
-        </motion.div>
+        {/* Grid lines */}
+        <div className="hero-grid" aria-hidden="true" />
 
-        <motion.div
-          className="hero-inner"
-          style={{ opacity: heroFade, y: heroShift }}
-        >
-          {/* Left: Editorial text */}
-          <div className="hero-left">
-            <motion.div
-              className="hero-badge"
-              initial={{ opacity: 0, y: -14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08, duration: 0.48 }}
-            >
-              <span className="hero-live-dot" />
-              Live shopping · Free delivery
-            </motion.div>
+        <div className="section-container hero-inner">
+          {/* Left content */}
+          <div className="hero-content">
+            <div className="hero-badge">
+              <Sparkles size={13} /> Premium Shopping Experience
+            </div>
 
-            <h1 className="hero-h1">
-              {["Discover", "Premium", "Products."].map((word, i) => (
-                <span key={i} className="h1-line">
-                  <motion.span
-                    className={`h1-word${i === 1 ? " h1-accent" : ""}`}
-                    initial={{ y: "108%", opacity: 0 }}
-                    animate={{ y: "0%", opacity: 1 }}
-                    transition={{
-                      delay: 0.18 + i * 0.15,
-                      duration: 0.86,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                  >
-                    {word}
-                  </motion.span>
-                </span>
-              ))}
+            <h1 className="hero-title">
+              <span className="hero-line">Shop Every</span>
+              <span className="hero-line hero-line-accent">Category,</span>
+              <span className="hero-line">Track Every</span>
+              <span className="hero-line">Rupee.</span>
             </h1>
 
-            <motion.p
-              className="hero-sub"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.72, duration: 0.56 }}
-            >
-              Thousands of products. Every rupee tracked — automatically.
-              <br />Shop smarter, spend less.
-            </motion.p>
+            <p className="hero-sub">
+              Discover 10,000+ products across 14 categories — from the latest
+              electronics to everyday essentials. All in one premium store.
+            </p>
 
-            <motion.div
-              className="hero-ctas"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.88, duration: 0.5 }}
-            >
-              <MagneticBtn className="btn-primary" onClick={() => navigate("/products")}>
-                Shop Now <ArrowRight size={15} />
-              </MagneticBtn>
-              <MagneticBtn className="btn-ghost" onClick={() => navigate("/products")}>
-                Explore All
-              </MagneticBtn>
-            </motion.div>
+            <div className="hero-ctas">
+              <motion.button
+                className="hero-btn-primary"
+                onClick={() => navigate("/products")}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                Shop Now <ArrowRight size={18} />
+              </motion.button>
+              <motion.button
+                className="hero-btn-ghost"
+                onClick={() => navigate("/products")}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                Explore Categories
+              </motion.button>
+            </div>
 
-            <motion.div
-              className="hero-trust"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.06, duration: 0.6 }}
-            >
-              {[["10K+","Products"],["50K+","Customers"],["4.9★","Rating"]].map(([n,l]) => (
-                <div key={l} className="trust-item">
-                  <strong>{n}</strong>
-                  <span>{l}</span>
+            <div className="hero-stats-row">
+              {STATS.map(s => (
+                <div key={s.label} className="hero-stat">
+                  <div className="hero-stat-value">
+                    <span className="stat-num" data-val={s.value} data-dec={s.decimal ? "1" : "0"}>
+                      {s.decimal ? s.value.toFixed(1) : s.value.toLocaleString()}
+                    </span>
+                    <span className="hero-stat-suffix">{s.suffix}</span>
+                  </div>
+                  <div className="hero-stat-label">{s.label}</div>
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
-          {/* Right: Product card grid */}
-          <motion.div
-            className="hero-right"
-            initial={{ opacity: 0, x: 44 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.28, duration: 0.86, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="hero-product-grid">
-              <div className="hpg-glow" aria-hidden="true" />
-
-              <HeroCard product={heroProds[0]} floatDur={4.6} floatAmp={-12} tall={false} onNav={navigate} delay={0} />
-              <HeroCard product={heroProds[1]} floatDur={5.4} floatAmp={10}  tall={true}  onNav={navigate} delay={0.7} />
-              <HeroCard product={heroProds[2]} floatDur={3.9} floatAmp={-8}  tall={false} onNav={navigate} delay={1.3} />
-
-              <motion.div
-                className="hpg-badge hpg-badge-a"
-                animate={{ y: [0, -7, 0] }}
-                transition={{ repeat: Infinity, duration: 3.2, ease: "easeInOut" }}
+          {/* Right — Three.js canvas */}
+          <div className="hero-3d">
+            <Suspense fallback={<div className="hero-3d-fallback" />}>
+              <Canvas
+                camera={{ position: [0, 0, 5], fov: 45 }}
+                dpr={[1, 1.5]}
+                gl={{ antialias: true, alpha: true }}
               >
-                🛒 Just added
-              </motion.div>
-              <motion.div
-                className="hpg-badge hpg-badge-b"
-                animate={{ y: [0, 6, 0] }}
-                transition={{ repeat: Infinity, duration: 4.0, ease: "easeInOut", delay: 1 }}
-              >
-                ⚡ Flash deal
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
+                <ambientLight intensity={0.4} />
+                <directionalLight position={[5, 5, 5]} intensity={1.2} color="#f97316" />
+                <pointLight position={[-4, -4, -4]} intensity={0.6} color="#3b82f6" />
+                <HeroOrb />
+                <Environment preset="city" />
+              </Canvas>
+            </Suspense>
+            {/* Decorative floating badges */}
+            <motion.div className="hero-float-badge hero-fb-1"
+              animate={{ y: [-8, 8, -8] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+              📱 iPhone 16 Pro
+            </motion.div>
+            <motion.div className="hero-float-badge hero-fb-2"
+              animate={{ y: [6, -6, 6] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}>
+              ⚡ Flash Deals
+            </motion.div>
+            <motion.div className="hero-float-badge hero-fb-3"
+              animate={{ y: [-5, 9, -5] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}>
+              🛒 Free Delivery
+            </motion.div>
+          </div>
+        </div>
 
-        <LiveActivity />
+        {/* Live purchase toast */}
+        <AnimatePresence>
+          {showLive && (
+            <motion.div className="live-toast"
+              initial={{ opacity:0, x:-60, y:10 }}
+              animate={{ opacity:1, x:0, y:0 }}
+              exit={{ opacity:0, x:-40 }}
+              transition={{ type:"spring", stiffness:300, damping:28 }}>
+              <span className="live-dot" />
+              <span className="live-emoji">{LIVE_PURCHASES[liveIdx].emoji}</span>
+              <div className="live-text">
+                <strong>{LIVE_PURCHASES[liveIdx].name}</strong> from {LIVE_PURCHASES[liveIdx].city}
+                <span>just bought {LIVE_PURCHASES[liveIdx].product}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <motion.div
-          className="scroll-pill"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
-        >
-          <div className="pill-body">
-            <div className="pill-dot" />
+        {/* Scroll indicator */}
+        <motion.div className="scroll-indicator"
+          animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}>
+          <div className="scroll-mouse">
+            <div className="scroll-wheel" />
           </div>
         </motion.div>
       </section>
 
-      {/* ═══════════════ MARQUEE ═══════════════ */}
-      <Marquee />
-
-      {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="features-section">
-        <div className="features-inner">
-          <motion.div
-            className="features-header"
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <span className="section-label">Why Thansel Zovia</span>
-            <h2 className="features-h2">Built Different.<br /><em>For Smart Shoppers.</em></h2>
-          </motion.div>
-          <div className="features-grid">
-            {FEATURES.map((f, i) => (
-              <motion.div
-                key={f.id}
-                className={`fc fc-${f.bg}`}
-                initial={{ opacity: 0, y: 56 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: i * 0.14, duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -12, transition: { type: "spring", stiffness: 280, damping: 22 } }}
-              >
-                <div className="fc-glow-ring" aria-hidden="true" />
-                <span className="fc-tag">{f.tag}</span>
-                <div className="fc-big">{f.big}</div>
-                <h3 className="fc-title">{f.title}</h3>
-                <p className="fc-desc">{f.desc}</p>
-                <div className="fc-arrow">↗</div>
-              </motion.div>
+      {/* ══ BRAND MARQUEE ═════════════════════════════════════════════════════ */}
+      <div className="brands-strip">
+        <div className="brands-marquee">
+          <div className="brands-track">
+            {[...BRANDS, ...BRANDS].map((b, i) => (
+              <span key={i} className="brand-item">
+                <span className="brand-dot" />
+                {b}
+              </span>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ CATEGORIES ════════════════════════════════════════════════════════ */}
+      <section className="home-section reveal-section" ref={sectionsRef}>
+        <div className="section-container">
+          <div className="section-header">
+            <div>
+              <span className="section-tag"><TrendingUp size={13}/> Shop By Category</span>
+              <h2 className="section-title">Everything You Need</h2>
+            </div>
+            <button className="see-all-btn" onClick={() => navigate("/products")}>
+              View All <ChevronRight size={16}/>
+            </button>
+          </div>
+
+          <div className="cats-grid">
+            {visibleCats.map((cat, i) => {
+              const meta = CAT_META[cat.name] || { icon: "🛍️", color: "#ea580c", bg: "rgba(234,88,12,0.1)" };
+              return (
+                <motion.button
+                  key={cat.name}
+                  className="cat-card"
+                  custom={i}
+                  variants={cardV}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.2 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => navigate(`/products?category=${encodeURIComponent(cat.name)}`)}
+                  style={{ "--cat-color": meta.color, "--cat-bg": meta.bg }}
+                >
+                  <div className="cat-icon-wrap">
+                    <span className="cat-icon">{meta.icon}</span>
+                  </div>
+                  <div className="cat-info">
+                    <span className="cat-name">{cat.name}</span>
+                  </div>
+                  <ArrowRight size={14} className="cat-arrow" />
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════ PRODUCTS CAROUSEL ═══════════════ */}
-      {products.length > 0 && (
-        <motion.section
-          className="trending-section"
-          variants={slideR}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-70px" }}
-        >
-          <div className="section-head">
+      {/* ══ TRENDING PRODUCTS ═════════════════════════════════════════════════ */}
+      <section className="home-section reveal-section">
+        <div className="section-container">
+          <div className="section-header">
             <div>
-              <div className="section-label">Handpicked For You</div>
-              <h2 className="section-title">Trending Now</h2>
+              <span className="section-tag"><Zap size={13}/> Trending Now</span>
+              <h2 className="section-title">Hot This Week</h2>
             </div>
-            <div className="carousel-arrows">
-              <button
-                className="arrow-btn"
-                onClick={() => carousel.scroll(-1)}
-                disabled={carousel.atStart}
-                aria-label="Scroll left"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                className="arrow-btn"
-                onClick={() => carousel.scroll(1)}
-                disabled={carousel.atEnd}
-                aria-label="Scroll right"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+            <button className="see-all-btn" onClick={() => navigate("/products")}>
+              View All <ChevronRight size={16}/>
+            </button>
           </div>
 
-          <div className="carousel-track" ref={carousel.trackRef}>
-            <AnimatePresence>
-              {products.map((p, i) => (
-                <motion.div
-                  key={p._id}
-                  className="prod-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: Math.min(i * 0.04, 0.8),
-                    duration: 0.4,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  whileHover={{ y: -6 }}
-                  onClick={() => navigate(`/products/${p._id}`)}
-                >
-                  <div className="prod-img-wrap">
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://placehold.co/300x220/F4F4F8/9898B0?text=${
-                          encodeURIComponent(p.name?.split(" ")[0] || "Item")
-                        }`;
-                      }}
-                    />
-                    {p.mrp && p.mrp > p.price && (
-                      <span className="prod-disc-badge">
-                        {Math.round(((p.mrp - p.price) / p.mrp) * 100)}% OFF
-                      </span>
-                    )}
-                    <button
-                      className={`cart-quick${addedId === p._id ? " added" : ""}`}
-                      onClick={(e) => handleAdd(e, p)}
-                      aria-label="Add to cart"
-                    >
-                      {addedId === p._id
-                        ? <span className="cart-check">✓</span>
-                        : <ShoppingCart size={15} />}
-                    </button>
+          {loading ? (
+            <div className="hpc-skeleton-row">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="hpc-skeleton">
+                  <div className="skeleton-img shimmer" />
+                  <div className="skeleton-body">
+                    <div className="shimmer" style={{ height:12, width:"60%", borderRadius:6, marginBottom:8 }} />
+                    <div className="shimmer" style={{ height:16, width:"90%", borderRadius:6, marginBottom:12 }} />
+                    <div className="shimmer" style={{ height:14, width:"40%", borderRadius:6 }} />
                   </div>
-                  <div className="prod-info">
-                    <p className="prod-cat">{p.category}</p>
-                    <p className="prod-name">{p.name}</p>
-                    <div className="prod-price-row">
-                      <span className="prod-price">₹{p.price?.toLocaleString("en-IN")}</span>
-                      {p.mrp && p.mrp > p.price && (
-                        <span className="prod-mrp">₹{p.mrp?.toLocaleString("en-IN")}</span>
-                      )}
-                    </div>
-                    {p.rating && (
-                      <div className="prod-rating-row">
-                        <span className="prod-star">★</span>
-                        <span className="prod-rating-val">{p.rating}</span>
-                      </div>
-                    )}
-                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="hpc-scroll-row">
+              {(trending.length ? trending : products.slice(0, 10)).map((p, i) => (
+                <motion.div key={p._id}
+                  initial={{ opacity:0, x:30 }}
+                  whileInView={{ opacity:1, x:0 }}
+                  viewport={{ once:true }}
+                  transition={{ delay: i * 0.06, duration:0.5, ease:[0.16,1,0.3,1] }}>
+                  <ProductCard product={p} onAdd={handleAdd} />
                 </motion.div>
               ))}
-            </AnimatePresence>
-          </div>
-        </motion.section>
-      )}
-
-      {/* ═══════════════ CATEGORIES BENTO ═══════════════ */}
-      <motion.section
-        className="cats-section"
-        variants={slideL}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-70px" }}
-      >
-        <div className="section-head">
-          <div>
-            <div className="section-label">Browse By Category</div>
-            <h2 className="section-title">Shop Every World</h2>
-          </div>
-          <button className="view-all-btn" onClick={() => navigate("/products")}>
-            View all <ArrowRight size={14} />
-          </button>
+            </div>
+          )}
         </div>
+      </section>
 
-        <div className="bento-grid">
-          {CATS.map((c, i) => (
-            <motion.div
-              key={c.name}
-              className={`bc bc-${i}`}
-              whileHover={{ scale: 1.028, transition: { type: "spring", stiffness: 280, damping: 22 } }}
-              onClick={() => navigate(`/products?category=${encodeURIComponent(c.name)}`)}
-            >
-              <span className="bc-watermark" aria-hidden="true">{c.name.split(" ")[0]}</span>
-              <motion.span
-                className="bc-emoji"
-                whileHover={{ scale: 1.28, rotate: 10 }}
-                transition={{ type: "spring", stiffness: 300, damping: 14 }}
-              >
-                {c.emoji}
-              </motion.span>
-              <p className="bc-name">{c.name}</p>
-              <p className="bc-sub">{c.sub}</p>
-            </motion.div>
+      {/* ══ STATS STRIP ═══════════════════════════════════════════════════════ */}
+      <section className="stats-section reveal-section" ref={statsRef}>
+        <div className="stats-glow" />
+        <div className="section-container stats-inner">
+          {STATS.map(s => (
+            <div key={s.label} className="stat-card">
+              <div className="stat-card-value">
+                <span className="stat-num" data-val={s.value} data-dec={s.decimal ? "1" : "0"}>
+                  {s.decimal ? s.value.toFixed(1) : s.value.toLocaleString()}
+                </span>
+                <span className="stat-card-suffix">{s.suffix}</span>
+              </div>
+              <div className="stat-card-label">{s.label}</div>
+            </div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      {/* ═══════════════ STATS ═══════════════ */}
-      <motion.section
-        className="stats-section"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-60px" }}
-      >
-        <div className="stats-inner">
-          <div className="stats-copy">
-            <div className="section-label light">By the numbers</div>
-            <h2 className="stats-title">The Thansel Zovia<br />Effect</h2>
+      {/* ══ FEATURES ══════════════════════════════════════════════════════════ */}
+      <section className="home-section reveal-section">
+        <div className="section-container">
+          <div className="section-header center">
+            <div>
+              <span className="section-tag"><BadgeCheck size={13}/> Why Choose Us</span>
+              <h2 className="section-title">Built for Your Trust</h2>
+            </div>
           </div>
-          <div className="stats-grid">
-            {STATS.map((s) => (
-              <StatCard key={s.label} {...s} />
+          <div className="features-grid">
+            {FEATURES.map((f, i) => (
+              <motion.div key={f.title} className="feature-card"
+                custom={i} variants={cardV} initial="hidden"
+                whileInView="visible" viewport={{ once:true, amount:0.2 }}
+                whileHover={{ y:-4 }}>
+                <div className="feature-icon" style={{ background: `${f.color}18`, color: f.color }}>
+                  <f.icon size={22} strokeWidth={1.8} />
+                </div>
+                <h3 className="feature-title">{f.title}</h3>
+                <p className="feature-desc">{f.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* ═══════════════ CTA ═══════════════ */}
-      <motion.section
-        className="cta-section"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-60px" }}
-      >
-        <div className="cta-grain" aria-hidden="true" />
-        <div className="cta-glow cta-g1" aria-hidden="true" />
-        <div className="cta-glow cta-g2" aria-hidden="true" />
-        <div className="cta-inner">
-          <h2 className="cta-title">Start Shopping<br />Smarter Today.</h2>
-          <p className="cta-sub">
-            Join 50,000+ Indians who track every rupee and love every purchase.
-          </p>
-          <div className="cta-btns">
-            <MagneticBtn className="cta-btn-main" onClick={() => navigate("/signup")}>
-              Create Free Account <ArrowRight size={15} />
-            </MagneticBtn>
-            <MagneticBtn className="cta-btn-ghost" onClick={() => navigate("/products")}>
-              Browse Products
-            </MagneticBtn>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="home-footer">
-        <div className="footer-inner">
-          <div className="footer-brand">
-            <div className="footer-logo">
-              <span className="footer-logo-mark">TZ</span>
-              <span>Thansel Zovia</span>
+      {/* ══ NEW ARRIVALS ══════════════════════════════════════════════════════ */}
+      {(newArrivals.length > 0 || products.length > 0) && (
+        <section className="home-section reveal-section">
+          <div className="section-container">
+            <div className="section-header">
+              <div>
+                <span className="section-tag"><Sparkles size={13}/> Fresh Drops</span>
+                <h2 className="section-title">New Arrivals</h2>
+              </div>
+              <button className="see-all-btn" onClick={() => navigate("/products")}>
+                View All <ChevronRight size={16}/>
+              </button>
             </div>
-            <p>India's premium shopping &amp; expense tracking platform. Shop smart, live better.</p>
-            <div className="footer-socials">
-              {["Twitter", "Instagram", "LinkedIn"].map((s) => (
-                <span key={s} className="social-chip">{s}</span>
+            <div className="new-arrivals-grid">
+              {(newArrivals.length ? newArrivals : products.slice(10, 18)).map((p, i) => (
+                <motion.div key={p._id}
+                  custom={i} variants={cardV} initial="hidden"
+                  whileInView="visible" viewport={{ once:true, amount:0.15 }}>
+                  <ProductCard product={p} onAdd={handleAdd} />
+                </motion.div>
               ))}
             </div>
           </div>
+        </section>
+      )}
 
-          <div className="footer-cols">
-            {[
-              { title: "Shop",    links: ["All Products","Electronics","Fashion","Sports","Books"] },
-              { title: "Account", links: ["Login","Sign Up","My Orders","Wishlist","Profile"] },
-              { title: "Help",    links: ["FAQ","Shipping","Returns","Contact","Privacy"] },
-            ].map((col) => (
-              <div key={col.title} className="footer-col">
-                <h4>{col.title}</h4>
-                {col.links.map((l) => (
-                  <span
-                    key={l}
-                    className="footer-link"
-                    onClick={() => navigate("/products")}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && navigate("/products")}
-                  >
-                    {l}
-                  </span>
+      {/* ══ CTA BANNER ════════════════════════════════════════════════════════ */}
+      <section className="cta-banner reveal-section">
+        <div className="cta-glow-1" />
+        <div className="cta-glow-2" />
+        <div className="section-container cta-inner">
+          <motion.div
+            initial={{ opacity:0, y:30 }}
+            whileInView={{ opacity:1, y:0 }}
+            viewport={{ once:true }}
+            transition={{ duration:0.7, ease:[0.16,1,0.3,1] }}>
+            <span className="section-tag" style={{ justifyContent:"center" }}>
+              <Heart size={13}/> Loved by 50,000+ Shoppers
+            </span>
+            <h2 className="cta-title">Discover Your Next Favourite</h2>
+            <p className="cta-sub">
+              Join thousands of satisfied customers across India who trust
+              Thansel Zovia for quality products at unbeatable prices.
+            </p>
+            <div className="cta-btns">
+              <motion.button className="hero-btn-primary" onClick={() => navigate("/products")}
+                whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}>
+                Start Shopping <ArrowRight size={17}/>
+              </motion.button>
+              {!user && (
+                <motion.button className="hero-btn-ghost" onClick={() => navigate("/signup")}
+                  whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}>
+                  Create Account
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══ FOOTER ════════════════════════════════════════════════════════════ */}
+      <footer className="home-footer">
+        <div className="section-container footer-inner">
+          <div className="footer-brand">
+            <span className="footer-logo">🛍️ Thansel Zovia</span>
+            <p className="footer-tagline">
+              Premium shopping, smarter spending.
+            </p>
+          </div>
+          <div className="footer-links">
+            {[["Shop",["All Products","/products"],["Electronics","/products?category=Electronics"],["Fashion","/products?category=Fashion"]],
+              ["Account",["Login","/login"],["Sign Up","/signup"],["My Cart","/cart"]],
+              ["Support",["Help Center","#"],["Returns","#"],["Contact","#"]]].map(([title,...links]) => (
+              <div key={title} className="footer-col">
+                <h4 className="footer-col-title">{title}</h4>
+                {links.map(([label, href]) => (
+                  <button key={label} className="footer-link"
+                    onClick={() => href !== "#" && navigate(href)}>{label}</button>
                 ))}
               </div>
             ))}
           </div>
         </div>
-        <div className="footer-bar">
-          <span>© 2025 Thansel Zovia. All rights reserved.</span>
+        <div className="footer-bottom">
+          <span>© 2026 Thansel Zovia. All rights reserved.</span>
           <span>Made with ❤️ in India</span>
         </div>
       </footer>
