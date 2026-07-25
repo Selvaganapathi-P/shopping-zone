@@ -205,20 +205,8 @@ export default function AdminDashboard() {
     } catch { toast.error("Delete failed."); }
   };
 
-  const [deletingAll,    setDeletingAll]    = useState(false);
   const [deletingSeeded, setDeletingSeeded] = useState(false);
   const [seeding,        setSeeding]        = useState(false);
-
-  const handleDeleteAll = async () => {
-    if (!window.confirm(`Delete ALL ${products.length} products permanently? This cannot be undone.`)) return;
-    setDeletingAll(true);
-    try {
-      const { data } = await API.delete("/products/all");
-      setProducts([]);
-      toast.success(data.message);
-    } catch { toast.error("Failed to delete all products."); }
-    finally { setDeletingAll(false); }
-  };
 
   const handleDeleteSeeded = async () => {
     const count = products.filter(p => p.isSeeded).length;
