@@ -40,15 +40,9 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Premium image fade-in on load ── */
+/* ── Image base ── */
 img {
   transition: opacity 0.3s ease;
-}
-img[loading="lazy"] {
-  opacity: 0;
-}
-img[loading="lazy"].loaded {
-  opacity: 1;
 }
 
 /* ── Button ripple ── */
