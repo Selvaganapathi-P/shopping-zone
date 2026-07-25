@@ -1,13 +1,14 @@
 const express = require("express");
 const router  = express.Router();
-const { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler, deleteAllProducts } = require("../controller/productController");
+const { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler, deleteAllProducts, deleteSeededProducts } = require("../controller/productController");
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 const log = require("../middleware/activityLog");
 
 router.get("/",               getProducts);
-router.post("/seed",       protect, adminOnly, seedProductsHandler);
-router.delete("/all",      protect, adminOnly, deleteAllProducts);
+router.post("/seed",        protect, adminOnly, seedProductsHandler);
+router.delete("/seeded",    protect, adminOnly, deleteSeededProducts);
+router.delete("/all",       protect, adminOnly, deleteAllProducts);
 router.get("/price-drops",    getPriceDrops);
 router.get("/pexels-photo",   protect, adminOnly, getPexelsPhoto);
 router.get("/:id",            getProductById);

@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar/Navbar";
 import toast from "react-hot-toast";
 import { Search, SlidersHorizontal, Star, ShoppingCart, Check, X, Heart, Mic, MicOff, Zap } from "lucide-react";
+import { CATEGORY_NAMES, SUBCATEGORIES } from "../config/categories";
 import "./Products.css";
 
 const SORT_OPTIONS = ["Default","Price: Low to High","Price: High to Low","Top Rated"];
@@ -96,7 +97,6 @@ export default function Products() {
   const navigate                                   = useNavigate();
   const [products, setProducts]                   = useState([]);
   const [filtered, setFiltered]                   = useState([]);
-  const [categories, setCategories]               = useState(["All"]);
   const [subcategories, setSubcategories]         = useState([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState("All");
   const [loading, setLoading]                     = useState(true);
@@ -123,11 +123,7 @@ export default function Products() {
 
   useEffect(() => {
     API.get("/products")
-      .then(({ data }) => {
-        setProducts(data);
-        const cats = ["All", ...Array.from(new Set(data.map(p => p.category).filter(Boolean))).sort()];
-        setCategories(cats);
-      })
+      .then(({ data }) => setProducts(data))
       .catch(() => toast.error("Failed to load products."))
       .finally(() => setLoading(false));
   }, []);
@@ -142,12 +138,10 @@ export default function Products() {
 
   useEffect(() => {
     if (selectedCategory === "All") { setSubcategories([]); return; }
-    const subs = ["All", ...Array.from(new Set(
-      products.filter(p => p.category === selectedCategory).map(p => p.subcategory).filter(Boolean)
-    )).sort()];
-    setSubcategories(subs.length > 2 ? subs : []);
+    const subs = SUBCATEGORIES[selectedCategory];
+    setSubcategories(subs ? ["All", ...subs] : []);
     setSelectedSubcategory("All");
-  }, [selectedCategory, products]);
+  }, [selectedCategory]);
 
   // Search autocomplete
   useEffect(() => {
@@ -265,7 +259,7 @@ export default function Products() {
     });
   };
 
-  const resetFilters = () => { setSelectedCategory("All"); setPriceRange(100000); setSearch(""); setSortBy("Default"); setAdvFilters({}); };
+  const resetFilters = () => { setSelectedCategory("All"); setSelectedSubcategory("All"); setPriceRange(500000); setSearch(""); setSortBy("Default"); setAdvFilters({}); };
 
   const advFilterCount = Object.values(advFilters).reduce((s, v) => s + (v?.length || 0), 0);
   const activeFilterCount = [selectedCategory !== "All", priceRange < 100000, sortBy !== "Default"].filter(Boolean).length + advFilterCount;
@@ -292,7 +286,7 @@ export default function Products() {
           </div>
           <div className="filter-group">
             <h4>Category</h4>
-            {categories.map((cat) => (
+            {CATEGORY_NAMES.map((cat) => (
               <label key={cat} className={`filter-label ${selectedCategory === cat ? "active" : ""}`}>
                 <input type="radio" name="category" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} className="sr-only" />
                 <span className="filter-check">{selectedCategory === cat && <Check size={12} />}</span>

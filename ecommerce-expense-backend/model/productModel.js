@@ -29,6 +29,7 @@ const productSchema = new mongoose.Schema({
   isNewArrival: { type: Boolean, default: false },
   isActive:     { type: Boolean, default: true },
   isVisible:    { type: Boolean, default: true },
+  isSeeded:     { type: Boolean, default: false, index: true },
   flashSale: {
     enabled:   { type: Boolean, default: false },
     salePrice: { type: Number, default: null },

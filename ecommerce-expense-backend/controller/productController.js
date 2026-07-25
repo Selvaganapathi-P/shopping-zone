@@ -186,17 +186,33 @@ const deleteAllProducts = async (req, res) => {
   }
 };
 
+const deleteSeededProducts = async (req, res) => {
+  try {
+    const { deletedCount } = await Product.deleteMany({ isSeeded: true });
+    res.json({ message: `Deleted ${deletedCount} seed products` });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete seed products", error: err.message });
+  }
+};
+
 const seedProductsHandler = async (req, res) => {
   try {
-    const existing = await Product.countDocuments();
-    if (existing > 0) await Product.deleteMany({});
-    const result = await Product.insertMany(SEED_DATA);
+    // Only wipe previously seeded products — keep admin-added products
+    await Product.deleteMany({ isSeeded: true });
+    const data = SEED_DATA.map(p => ({ ...p, isSeeded: true }));
+    const BATCH = 150;
+    let inserted = 0;
     const counts = {};
-    for (const p of result) counts[p.category] = (counts[p.category] || 0) + 1;
-    res.json({ message: `Seeded ${result.length} products`, counts });
+    for (let i = 0; i < data.length; i += BATCH) {
+      const batch = data.slice(i, i + BATCH);
+      const saved = await Product.insertMany(batch, { ordered: false });
+      inserted += saved.length;
+      for (const p of saved) counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    res.json({ message: `Seeded ${inserted} products across ${Object.keys(counts).length} categories`, counts });
   } catch (err) {
     res.status(500).json({ message: "Seed failed", error: err.message });
   }
 };
 
-module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler, deleteAllProducts };
+module.exports = { getProducts, getProductById, getPriceDrops, getPexelsPhoto, addProduct, updateProduct, deleteProduct, toggleVisibility, setFlashSale, seedProductsHandler, deleteAllProducts, deleteSeededProducts };

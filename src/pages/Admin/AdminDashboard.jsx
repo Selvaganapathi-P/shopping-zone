@@ -205,11 +205,12 @@ export default function AdminDashboard() {
     } catch { toast.error("Delete failed."); }
   };
 
-  const [deletingAll, setDeletingAll] = useState(false);
-  const [seeding,     setSeeding]     = useState(false);
+  const [deletingAll,    setDeletingAll]    = useState(false);
+  const [deletingSeeded, setDeletingSeeded] = useState(false);
+  const [seeding,        setSeeding]        = useState(false);
 
   const handleDeleteAll = async () => {
-    if (!window.confirm(`Delete ALL ${products.length} products? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete ALL ${products.length} products permanently? This cannot be undone.`)) return;
     setDeletingAll(true);
     try {
       const { data } = await API.delete("/products/all");
@@ -219,8 +220,20 @@ export default function AdminDashboard() {
     finally { setDeletingAll(false); }
   };
 
+  const handleDeleteSeeded = async () => {
+    const count = products.filter(p => p.isSeeded).length;
+    if (!window.confirm(`Delete ${count} seed products? Admin-added products will be kept.`)) return;
+    setDeletingSeeded(true);
+    try {
+      const { data } = await API.delete("/products/seeded");
+      setProducts(prev => prev.filter(p => !p.isSeeded));
+      toast.success(data.message);
+    } catch { toast.error("Failed to delete seed products."); }
+    finally { setDeletingSeeded(false); }
+  };
+
   const handleSeedProducts = async () => {
-    if (!window.confirm("This will DELETE all existing products and seed fresh catalog data. Continue?")) return;
+    if (!window.confirm("This will re-seed the catalog (existing seed products replaced). Admin-added products are kept. Continue?")) return;
     setSeeding(true);
     try {
       const { data } = await API.post("/products/seed");
@@ -584,8 +597,8 @@ export default function AdminDashboard() {
                 <button className="add-product-btn" style={{ background:"rgba(234,88,12,0.12)", color:"#ea580c", border:"1px solid rgba(234,88,12,0.3)" }} onClick={handleSeedProducts} disabled={seeding}>
                   {seeding ? "Seeding…" : "🌱 Seed Catalog"}
                 </button>
-                <button className="add-product-btn" style={{ background:"rgba(239,68,68,0.12)", color:"#ef4444", border:"1px solid rgba(239,68,68,0.3)" }} onClick={handleDeleteAll} disabled={deletingAll}>
-                  <Trash2 size={15} /> {deletingAll ? "Deleting…" : "Delete All"}
+                <button className="add-product-btn" style={{ background:"rgba(239,68,68,0.12)", color:"#ef4444", border:"1px solid rgba(239,68,68,0.3)" }} onClick={handleDeleteSeeded} disabled={deletingSeeded}>
+                  <Trash2 size={15} /> {deletingSeeded ? "Deleting…" : "Delete Seed Products"}
                 </button>
                 <button className="add-product-btn" onClick={openAddModal}>
                   <Plus size={16} /> Add Product

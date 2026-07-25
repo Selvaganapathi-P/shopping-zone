@@ -8,24 +8,10 @@ import {
   ShoppingCart, ChevronDown, LayoutDashboard,
   User, BarChart2, LogOut, Menu, X, Search, Heart, Zap,
 } from "lucide-react";
+import { NAV_LINKS, SEARCH_CATS } from "../../config/categories";
 import "./Navbar.css";
 
-const SEARCH_CATS = ["All","Electronics","Fashion","Home & Kitchen","Sports & Fitness","Beauty & Personal Care","Books","Groceries","Jewellery & Watches","Travel & Luggage"];
-
-const CAT_LINKS = [
-  { label: "All",                   cat: null,                      icon: null,  hot: false },
-  { label: "Electronics",           cat: "Electronics",             icon: "📱",  hot: false },
-  { label: "Fashion",               cat: "Fashion",                 icon: "👗",  hot: false },
-  { label: "Home & Kitchen",        cat: "Home & Kitchen",          icon: "🏠",  hot: false },
-  { label: "Sports",                cat: "Sports & Fitness",        icon: "⚽",  hot: false },
-  { label: "Beauty",                cat: "Beauty & Personal Care",  icon: "💄",  hot: false },
-  { label: "Books",                 cat: "Books",                   icon: "📚",  hot: false },
-  { label: "Groceries",             cat: "Groceries",               icon: "🛒",  hot: false },
-  { label: "Jewellery",             cat: "Jewellery & Watches",     icon: "💍",  hot: false },
-  { label: "Travel",                cat: "Travel & Luggage",        icon: "🧳",  hot: false },
-  { label: "Offers",                cat: null,                      icon: null,  hot: true  },
-  { label: "New Arrivals",          cat: null,                      icon: null,  hot: false },
-];
+const CAT_LINKS = NAV_LINKS;
 
 export default function Navbar({ transparent = false }) {
   const { user, logout }          = useAuth();
