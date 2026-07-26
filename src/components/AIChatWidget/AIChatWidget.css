@@ -36,7 +36,7 @@
   font-size: 10px;
   font-weight: 700;
   color: white;
-  border: 2px solid #0f172a;
+  border: 2px solid #ffffff;
 }
 
 .ai-chat-panel {
@@ -45,10 +45,10 @@
   right: 28px;
   width: 360px;
   max-height: 520px;
-  background: #1e293b;
+  background: #ffffff;
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12);
   z-index: 8999;
   display: flex;
   flex-direction: column;
@@ -136,7 +136,7 @@
 
 .ai-chat-messages::-webkit-scrollbar { width: 4px; }
 .ai-chat-messages::-webkit-scrollbar-track { background: transparent; }
-.ai-chat-messages::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+.ai-chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.20); border-radius: 2px; }
 
 .ai-msg {
   display: flex;
@@ -175,9 +175,9 @@
 }
 
 .ai-msg.assistant .ai-msg-bubble {
-  background: rgba(255,255,255,0.06);
-  color: #f8fafc;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.04);
+  color: var(--text);
+  border: 1px solid rgba(0,0,0,0.08);
   border-bottom-left-radius: 4px;
 }
 
@@ -197,7 +197,7 @@
 .ai-typing-dot {
   width: 6px;
   height: 6px;
-  background: #64748b;
+  background: rgba(0,0,0,0.35);
   border-radius: 50%;
   animation: typing-bounce 1.4s infinite ease-in-out;
 }
@@ -216,7 +216,7 @@
   flex-wrap: wrap;
   gap: 6px;
   flex-shrink: 0;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .ai-suggestion-chip {
@@ -239,18 +239,18 @@
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  background: #1e293b;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  background: #ffffff;
   flex-shrink: 0;
 }
 
 .ai-chat-input {
   flex: 1;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.12);
   border-radius: 12px;
   padding: 10px 12px;
-  color: #f8fafc;
+  color: var(--text);
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -264,7 +264,7 @@
   border-color: rgba(234, 88, 12, 0.4);
 }
 
-.ai-chat-input::placeholder { color: #475569; }
+.ai-chat-input::placeholder { color: rgba(0,0,0,0.35); }
 
 .ai-send-btn {
   width: 40px;
@@ -288,6 +288,6 @@
 .ai-no-config {
   padding: 20px 16px;
   text-align: center;
-  color: #64748b;
+  color: var(--text-subtle);
   font-size: 13px;
 }

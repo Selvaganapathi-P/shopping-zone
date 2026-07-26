@@ -43,15 +43,15 @@ const AdminRoute = ({ children }) => {
       <div style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: "16px",
-        background: "#0f172a",
+        background: "#ffffff",
       }}>
         <div style={{
           width: "40px", height: "40px",
-          border: "3px solid rgba(255,255,255,0.1)",
+          border: "3px solid rgba(0,0,0,0.10)",
           borderTopColor: "#ea580c", borderRadius: "50%",
           animation: "spin 0.8s linear infinite",
         }} />
-        <p style={{ color: "#64748b", fontSize: "14px", fontFamily: "Inter,sans-serif" }}>
+        <p style={{ color: "rgba(15,23,42,0.45)", fontSize: "14px", fontFamily: "Inter,sans-serif" }}>
           Verifying admin access…
         </p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -128,9 +128,9 @@ function App() {
                 toastOptions={{
                   duration: 3000,
                   style: {
-                    background: "#1e293b",
-                    color: "#f8fafc",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    border: "1px solid rgba(0,0,0,0.10)",
                     borderRadius: "12px",
                     fontSize: "14px",
                     fontFamily: "Inter, sans-serif",

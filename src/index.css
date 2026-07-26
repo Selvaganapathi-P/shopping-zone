@@ -11,36 +11,36 @@
   --brand:          #ea580c;
   --brand-light:    #f97316;
   --brand-dark:     #c2410c;
-  --brand-glow:     rgba(234,88,12,0.18);
-  --brand-glow-sm:  rgba(234,88,12,0.10);
+  --brand-glow:     rgba(234,88,12,0.15);
+  --brand-glow-sm:  rgba(234,88,12,0.08);
 
   /* Backgrounds */
-  --bg:        #06060d;
-  --bg-1:      #0d0d18;
-  --bg-2:      #12121f;
-  --bg-3:      #1a1a2a;
-  --bg-card:   rgba(255,255,255,0.035);
-  --bg-hover:  rgba(255,255,255,0.055);
+  --bg:        #ffffff;
+  --bg-1:      #f8fafc;
+  --bg-2:      #f1f5f9;
+  --bg-3:      #e2e8f0;
+  --bg-card:   rgba(0,0,0,0.02);
+  --bg-hover:  rgba(0,0,0,0.04);
 
   /* Glass */
-  --glass:        rgba(13,13,24,0.80);
-  --glass-border: rgba(255,255,255,0.08);
-  --glass-border-hover: rgba(255,255,255,0.14);
+  --glass:        rgba(255,255,255,0.88);
+  --glass-border: rgba(0,0,0,0.08);
+  --glass-border-hover: rgba(0,0,0,0.14);
 
   /* Text */
-  --text:         #f8fafc;
-  --text-muted:   rgba(248,250,252,0.55);
-  --text-subtle:  rgba(248,250,252,0.30);
+  --text:         #0f172a;
+  --text-muted:   rgba(15,23,42,0.55);
+  --text-subtle:  rgba(15,23,42,0.35);
 
   /* Borders */
-  --border:       rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.13);
+  --border:       rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.14);
 
   /* Shadows */
-  --shadow-sm:  0 2px 8px rgba(0,0,0,0.4);
-  --shadow-md:  0 8px 32px rgba(0,0,0,0.5);
-  --shadow-lg:  0 20px 60px rgba(0,0,0,0.6);
-  --shadow-brand: 0 8px 32px rgba(234,88,12,0.25);
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg:  0 12px 40px rgba(0,0,0,0.10);
+  --shadow-brand: 0 8px 32px rgba(234,88,12,0.22);
 
   /* Radius */
   --r-sm:  8px;
@@ -86,8 +86,8 @@ a { text-decoration: none; color: inherit; }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
 
 /* ── Button ripple ── */
 button { position: relative; overflow: hidden; }
@@ -152,7 +152,7 @@ button:active::after { transform: scale(2.5); opacity: 1; transition: 0s; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner {
   width: 36px; height: 36px;
-  border: 2.5px solid rgba(255,255,255,0.1);
+  border: 2.5px solid rgba(0,0,0,0.10);
   border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
