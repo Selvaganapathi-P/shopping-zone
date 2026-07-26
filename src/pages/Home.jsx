@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState, Suspense } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Environment } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
@@ -17,8 +16,6 @@ import { useAuth } from "../context/AuthContext";
 import { MAIN_CATEGORIES } from "../config/categories";
 import toast from "react-hot-toast";
 import "./Home.css";
-
-gsap.registerPlugin(ScrollTrigger);
 
 // ── Three.js floating orb ────────────────────────────────────────────────────
 function HeroOrb() {
@@ -202,35 +199,47 @@ export default function Home() {
         .from(".hero-sub",     { opacity:0, y:24, duration:0.6, ease:"power3.out" }, "-=0.4")
         .from(".hero-ctas > *",{ opacity:0, y:18, stagger:0.1, duration:0.5, ease:"power3.out" }, "-=0.3")
         .from(".hero-stat",    { opacity:0, y:16, stagger:0.08, duration:0.4, ease:"power3.out" }, "-=0.2");
-
-      // Scroll-triggered reveals
-      gsap.utils.toArray(".reveal-section").forEach(el => {
-        gsap.fromTo(el,
-          { opacity:0, y:50 },
-          { opacity:1, y:0, duration:0.8, ease:"power3.out",
-            scrollTrigger: { trigger:el, start:"top 88%", once:true } }
-        );
-      });
-
-      // GSAP counter animation
-      gsap.utils.toArray(".stat-num").forEach(el => {
-        const target  = parseFloat(el.dataset.val);
-        const dec     = el.dataset.dec === "1";
-        const obj     = { n: 0 };
-        gsap.to(obj, {
-          n: target,
-          duration: 2.2,
-          ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true },
-          onUpdate: () => {
-            el.textContent = dec
-              ? obj.n.toFixed(1)
-              : Math.round(obj.n).toLocaleString();
-          },
-        });
-      });
     }, heroRef);
     return () => ctx.revert();
+  }, []);
+
+  // ── Scroll reveals (IntersectionObserver) ───────────────────────────────────
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target); }
+      }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll(".reveal-section").forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  // ── Counter animation (IntersectionObserver + rAF) ──────────────────────────
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        const target = parseFloat(el.dataset.val);
+        const dec    = el.dataset.dec === "1";
+        const start  = performance.now();
+        const dur    = 2200;
+        const tick   = (now) => {
+          const p = Math.min((now - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = dec
+            ? (target * eased).toFixed(1)
+            : Math.round(target * eased).toLocaleString();
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        io.unobserve(el);
+      }),
+      { threshold: 0.5 }
+    );
+    document.querySelectorAll(".stat-num").forEach(el => io.observe(el));
+    return () => io.disconnect();
   }, []);
 
   // ── Live purchase ticker ────────────────────────────────────────────────────

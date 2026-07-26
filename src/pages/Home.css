@@ -4,6 +4,10 @@
 
 .home-root { background: var(--bg); min-height: 100vh; }
 
+/* ── Scroll reveal (IntersectionObserver) ── */
+.reveal-section { opacity: 0; transform: translateY(48px); transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-out); }
+.reveal-section.is-visible { opacity: 1; transform: translateY(0); }
+
 /* ── HERO ────────────────────────────────────────────────── */
 .home-hero {
   position: relative;
