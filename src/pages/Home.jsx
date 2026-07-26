@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState, Suspense } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Environment } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
 import {
   ShoppingBag, ArrowRight, Star, Zap, Shield, RotateCcw,
-  Headphones, ChevronRight, TrendingUp, Sparkles, Package,
+  Headphones, ChevronRight, TrendingUp, Sparkles,
   Truck, BadgeCheck, Heart,
 } from "lucide-react";
 import API from "../api/axios";
