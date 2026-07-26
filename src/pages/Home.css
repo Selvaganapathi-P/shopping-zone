@@ -4,26 +4,6 @@
 
 .home-root { background: var(--bg); min-height: 100vh; }
 
-/* ── Hero entrance (CSS replaces GSAP timeline) ── */
-@keyframes hero-fade-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes hero-line-up {
-  from { opacity: 0; transform: translateY(70px) skewY(2deg); }
-  to   { opacity: 1; transform: translateY(0) skewY(0deg); }
-}
-.hero-badge { animation: hero-fade-up 0.5s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-line:nth-child(1) { animation: hero-line-up 0.85s 0.28s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-line:nth-child(2) { animation: hero-line-up 0.85s 0.40s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-line:nth-child(3) { animation: hero-line-up 0.85s 0.52s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-sub { animation: hero-fade-up 0.6s 0.62s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-ctas > *:nth-child(1) { animation: hero-fade-up 0.5s 0.72s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-ctas > *:nth-child(2) { animation: hero-fade-up 0.5s 0.82s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-stat:nth-child(1) { animation: hero-fade-up 0.4s 0.90s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-stat:nth-child(2) { animation: hero-fade-up 0.4s 0.98s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-stat:nth-child(3) { animation: hero-fade-up 0.4s 1.06s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-stat:nth-child(4) { animation: hero-fade-up 0.4s 1.14s cubic-bezier(0.16,1,0.3,1) both; }
 
 /* ── Scroll reveal (IntersectionObserver) ── */
 .reveal-section { opacity: 0; transform: translateY(48px); transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-out); }

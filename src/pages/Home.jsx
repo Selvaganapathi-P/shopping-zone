@@ -271,44 +271,66 @@ export default function Home() {
         <div className="section-container hero-inner">
           {/* Left content */}
           <div className="hero-content">
-            <div className="hero-badge">
+            <motion.div
+              className="hero-badge"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
               <Sparkles size={13} /> Premium Shopping Experience
-            </div>
+            </motion.div>
 
             <h1 className="hero-title">
-              <span className="hero-line">Shop Every</span>
-              <span className="hero-line hero-line-accent">Category,</span>
-              <span className="hero-line">Track Every</span>
-              <span className="hero-line">Rupee.</span>
+              <motion.span className="hero-line" initial={{ opacity: 0, y: 70, skewY: 2 }} animate={{ opacity: 1, y: 0, skewY: 0 }} transition={{ delay: 0.28, duration: 0.85, ease: [0.16, 1, 0.3, 1] }}>Shop Every</motion.span>
+              <motion.span className="hero-line hero-line-accent" initial={{ opacity: 0, y: 70, skewY: 2 }} animate={{ opacity: 1, y: 0, skewY: 0 }} transition={{ delay: 0.40, duration: 0.85, ease: [0.16, 1, 0.3, 1] }}>Category,</motion.span>
+              <motion.span className="hero-line" initial={{ opacity: 0, y: 70, skewY: 2 }} animate={{ opacity: 1, y: 0, skewY: 0 }} transition={{ delay: 0.52, duration: 0.85, ease: [0.16, 1, 0.3, 1] }}>Track Every</motion.span>
+              <motion.span className="hero-line" initial={{ opacity: 0, y: 70, skewY: 2 }} animate={{ opacity: 1, y: 0, skewY: 0 }} transition={{ delay: 0.64, duration: 0.85, ease: [0.16, 1, 0.3, 1] }}>Rupee.</motion.span>
             </h1>
 
-            <p className="hero-sub">
+            <motion.p
+              className="hero-sub"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.62, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
               Discover 10,000+ products across 14 categories — from the latest
               electronics to everyday essentials. All in one premium store.
-            </p>
+            </motion.p>
 
             <div className="hero-ctas">
               <motion.button
                 className="hero-btn-primary"
                 onClick={() => navigate("/products")}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                transition={{ delay: 0.72, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
                 Shop Now <ArrowRight size={18} />
               </motion.button>
               <motion.button
                 className="hero-btn-ghost"
                 onClick={() => navigate("/products")}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
+                transition={{ delay: 0.82, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
                 Explore Categories
               </motion.button>
             </div>
 
             <div className="hero-stats-row">
-              {STATS.map(s => (
-                <div key={s.label} className="hero-stat">
+              {STATS.map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  className="hero-stat"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.90 + i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                >
                   <div className="hero-stat-value">
                     <span className="stat-num" data-val={s.value} data-dec={s.decimal ? "1" : "0"}>
                       {s.decimal ? s.value.toFixed(1) : s.value.toLocaleString()}
@@ -316,7 +338,7 @@ export default function Home() {
                     <span className="hero-stat-suffix">{s.suffix}</span>
                   </div>
                   <div className="hero-stat-label">{s.label}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
