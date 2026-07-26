@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, Suspense } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { gsap } from "gsap";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Environment } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
@@ -167,7 +166,6 @@ export default function Home() {
   const { addToCart } = useCart();
   const { user }  = useAuth();
 
-  const heroRef    = useRef(null);
   const statsRef   = useRef(null);
   const sectionsRef= useRef(null);
 
@@ -188,19 +186,6 @@ export default function Home() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
-
-  // ── GSAP hero reveal ────────────────────────────────────────────────────────
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.1 });
-      tl.from(".hero-badge",   { opacity:0, y:16, duration:0.5, ease:"power3.out" })
-        .from(".hero-line",    { opacity:0, y:70, skewY:2, stagger:0.12, duration:0.85, ease:"power4.out" }, "-=0.2")
-        .from(".hero-sub",     { opacity:0, y:24, duration:0.6, ease:"power3.out" }, "-=0.4")
-        .from(".hero-ctas > *",{ opacity:0, y:18, stagger:0.1, duration:0.5, ease:"power3.out" }, "-=0.3")
-        .from(".hero-stat",    { opacity:0, y:16, stagger:0.08, duration:0.4, ease:"power3.out" }, "-=0.2");
-    }, heroRef);
-    return () => ctx.revert();
   }, []);
 
   // ── Scroll reveals (IntersectionObserver) ───────────────────────────────────
@@ -270,7 +255,7 @@ export default function Home() {
   const visibleCats = MAIN_CATEGORIES.slice(0, 8);
 
   return (
-    <div className="home-root" ref={heroRef}>
+    <div className="home-root">
       <Navbar transparent />
 
       {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
