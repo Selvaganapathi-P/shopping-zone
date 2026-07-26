@@ -6,8 +6,8 @@
 
 
 /* ── Scroll reveal (IntersectionObserver) ── */
-.reveal-section { opacity: 0; transform: translateY(48px); transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-out); }
-.reveal-section.is-visible { opacity: 1; transform: translateY(0); }
+.reveal-section { opacity: 1; transform: none; }
+.reveal-section.is-visible { opacity: 1; transform: none; }
 
 /* ── HERO ────────────────────────────────────────────────── */
 .home-hero {
