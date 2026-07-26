@@ -91,13 +91,6 @@ const STATS = [
   { value: 4.9,   suffix: "★",  label: "Rating",        decimal: true  },
 ];
 
-const LIVE_PURCHASES = [
-  { name: "Rahul M.", city: "Mumbai",    product: "iPhone 16 Pro", emoji: "📱" },
-  { name: "Priya S.", city: "Delhi",     product: "Nike Air Max",  emoji: "👟" },
-  { name: "Arjun K.", city: "Bangalore", product: "Sony XM5",      emoji: "🎧" },
-  { name: "Sneha R.", city: "Chennai",   product: "MacBook M3",    emoji: "💻" },
-  { name: "Vivek T.", city: "Hyderabad", product: "Levi's 511",    emoji: "👖" },
-];
 
 const cardV = {
   hidden:  { opacity: 0, y: 36 },
@@ -172,8 +165,6 @@ export default function Home() {
   const [products,  setProducts]  = useState([]);
   const [trending,  setTrending]  = useState([]);
   const [newArrivals, setNew]     = useState([]);
-  const [liveIdx,   setLiveIdx]   = useState(0);
-  const [showLive,  setShowLive]  = useState(false);
   const [loading,   setLoading]   = useState(true);
 
   // ── Fetch products ──────────────────────────────────────────────────────────
@@ -228,23 +219,6 @@ export default function Home() {
   }, []);
 
   // ── Live purchase ticker ────────────────────────────────────────────────────
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLive(true), 3500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!showLive) return;
-    const iv = setInterval(() => {
-      setShowLive(false);
-      setTimeout(() => {
-        setLiveIdx(i => (i + 1) % LIVE_PURCHASES.length);
-        setShowLive(true);
-      }, 500);
-    }, 4500);
-    return () => clearInterval(iv);
-  }, [showLive]);
-
   const handleAdd = (product) => {
     if (!user) { toast.error("Login to add to cart"); navigate("/login"); return; }
     addToCart(product);
@@ -374,23 +348,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Live purchase toast */}
-        <AnimatePresence>
-          {showLive && (
-            <motion.div className="live-toast"
-              initial={{ opacity:0, x:-60, y:10 }}
-              animate={{ opacity:1, x:0, y:0 }}
-              exit={{ opacity:0, x:-40 }}
-              transition={{ type:"spring", stiffness:300, damping:28 }}>
-              <span className="live-dot" />
-              <span className="live-emoji">{LIVE_PURCHASES[liveIdx].emoji}</span>
-              <div className="live-text">
-                <strong>{LIVE_PURCHASES[liveIdx].name}</strong> from {LIVE_PURCHASES[liveIdx].city}
-                <span>just bought {LIVE_PURCHASES[liveIdx].product}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Scroll indicator */}
         <motion.div className="scroll-indicator"
