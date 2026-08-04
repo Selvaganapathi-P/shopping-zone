@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { FiX, FiMapPin } from "react-icons/fi";
 import "./AddressModal.css";
@@ -10,10 +10,27 @@ export default function AddressModal({ onConfirm, onClose }) {
     addressLine2: "", city: "", state: "",
     pincode: "", landmark: "",
   });
+  const overlayRef = useRef(null);
+  const boxRef = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  // Block wheel/touchpad scroll on the dark overlay; allow it inside the modal box
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    const block = (e) => {
+      if (boxRef.current && boxRef.current.contains(e.target)) return;
+      e.preventDefault();
+    };
+    overlay.addEventListener("wheel",     block, { passive: false });
+    overlay.addEventListener("touchmove", block, { passive: false });
+    return () => {
+      overlay.removeEventListener("wheel",     block);
+      overlay.removeEventListener("touchmove", block);
+    };
   }, []);
 
   useEffect(() => {
@@ -54,8 +71,8 @@ export default function AddressModal({ onConfirm, onClose }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box">
+    <div className="modal-overlay" ref={overlayRef}>
+      <div className="modal-box" ref={boxRef}>
         <div className="modal-header">
           <div className="modal-title">
             <FiMapPin size={20} />

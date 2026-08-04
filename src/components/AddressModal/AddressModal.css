@@ -27,6 +27,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: modalSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   scrollbar-width: thick;
