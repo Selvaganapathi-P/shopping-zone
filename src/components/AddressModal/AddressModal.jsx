@@ -12,6 +12,11 @@ export default function AddressModal({ onConfirm, onClose }) {
   });
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
     const load = async () => {
       try {
         const { data } = await API.get("/auth/profile");
